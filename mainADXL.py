@@ -39,18 +39,9 @@ z_threshold = 0.4
 significanceThresholds = [x_threshold, y_threshold, z_threshold]
 checkingForSignificance = True
 
-def strConvertAxes (x,y,z):
-	return (str(x),str(y),str(z))
-
-
-def getXYZtFromPacket(packet):
-	x = packet[0]
-	y = packet[1]
-	z = packet[2]
-	time = packet[3]
-	return (x, y, z, time)
-
-# before writing to disk, check entire list if anything significant happened. Otherwise, delete.
+def addToList(dataList, axesPacket):
+	dataList.append(axesPacket)
+	return dataList
 
 def checkListForSignificance(dataList):
 	global significanceThresholds
@@ -68,7 +59,61 @@ def checkListForSignificance(dataList):
 			return True
 	return False
 
+def checkInputAnswer(input):
+	if float(input) == 0:
+		return False
+	else:
+		return True	
+		
+def clearScreen():
+	os.system('clear')
+
+def calibrateAxesValues(x, y, z):
+	global calibrationValues
 	
+	x += calibrationValues[0]
+	y += calibrationValues[1]
+	z += calibrationValues[2]
+	return (x, y, z)
+
+def getCalibrationOffsets ():
+	# Collect data for a certain amount of time to get averages (for subtraction)
+
+	counterCalibrate = 0
+	counterCalibrateMax = 100
+	calibrateList = []
+	calibrateValues = []
+	calibrateLoop = True
+	
+	x_average = 0
+	y_average = 0
+	z_average = 0
+	
+	while counterCalibrate <= counterCalibrateMax:
+		counterCalibrate += 1
+		(accel_x, accel_y, accel_z) = myADXL.getAxes()
+		calibrateValues = [accel_x, accel_y, accel_z]
+		calibrateList.append(calibrateValues)
+		
+	for	dataValues in calibrateList:
+		x_average += dataValues[0]
+		y_average += dataValues[1]
+		z_average += dataValues[2]
+	
+	x_fix = (x_average / len(calibrateList))*-1
+	y_fix = (y_average / len(calibrateList))*-1
+	z_fix = (z_average / len(calibrateList))*-1
+	calibrationValues = [x_fix, y_fix, z_fix]
+	
+	return calibrationValues
+
+def getXYZtFromPacket(packet):
+	x = packet[0]
+	y = packet[1]
+	z = packet[2]
+	time = packet[3]
+	return (x, y, z, time)
+
 def generateDataID():
 	ID = ""
 	randomNumber = 0
@@ -79,11 +124,37 @@ def generateDataID():
 		randomNumber = random.randint(0,9)
 		ID += str(randomNumber)
 	return ID
+
+def getData():
+	(x, y, z) = myADXL.getAxes()
+	time = str(datetime.now())
+	(x, y, z) = calibrateAxesValues(x, y, z)
+	axesPacket = [x, y, z, time]
+	return axesPacket
+
+def printSettings(title):
+	global interval, counterMaxTime, counterMax
+	global checkingForSignificance, significanceThresholds
+	global piID
+	
+	print ("\n######### " + title + " #########")
+	print ("RPi ID: " + piID)
+	print ("Interval: " + str(interval))
+	print ("Counts per file: " + str(counterMax) + " - approx: " + str(counterMaxTime) + " minutes")
+	print ("Checking for Significance - " + str(checkingForSignificance))
+	print ("Significance Thresholds - " + str(significanceThresholds))
+
+def readAndAddToList(dataList, calibrationValues):
+	(x, y, z) = calibrateAxesValues(x, y, z, calibrationValues)
+	axesPacket = [x, y, z, timeRead]
+	dataList.append(axesPacket)
+	return dataList
+	
+def strConvertAxes (x,y,z):
+	return (str(x),str(y),str(z))
 	
 def writeToDisk(dataList, interval, checking, piID):
 	global fileNumber
-	# Measure writing speed:
-	# timeStart = time.time()
 	
 	fileUniqueID = generateDataID()
 	headerString = ('Pi_ID: ' + piID
@@ -91,7 +162,6 @@ def writeToDisk(dataList, interval, checking, piID):
 					+ '\nSample rate: ' + str(interval)
 					+ '\nSamples: ' + str(len(dataList)) + '\n')
 
-	#testing!
 	# Format file numbering for 01, 02 ... 09 etc
 	if fileNumber < 10:
 		fileNumberWrite = '0' + str(fileNumber)
@@ -131,78 +201,6 @@ def writeToDisk(dataList, interval, checking, piID):
 	
 	logDataFile.close()
 	
-	# Print write speed
-	#print('File written @ ' + str(datetime.now()) + ' approx ' + str(time.time() - timeStart) + 's')
-	
-
-
-def getCalibrationOffsets ():
-	# Collect data for a certain amount of time to get averages (for subtraction)
-
-	counterCalibrate = 0
-	counterCalibrateMax = 100
-	calibrateList = []
-	calibrateValues = []
-	calibrateLoop = True
-	
-	x_average = 0
-	y_average = 0
-	z_average = 0
-	
-	while counterCalibrate <= counterCalibrateMax:
-		counterCalibrate += 1
-		(accel_x, accel_y, accel_z) = myADXL.getAxes()
-		calibrateValues = [accel_x, accel_y, accel_z]
-		calibrateList.append(calibrateValues)
-		
-	for	dataValues in calibrateList:
-		x_average += dataValues[0]
-		y_average += dataValues[1]
-		z_average += dataValues[2]
-	
-	x_fix = (x_average / len(calibrateList))*-1
-	y_fix = (y_average / len(calibrateList))*-1
-	z_fix = (z_average / len(calibrateList))*-1
-	calibrationValues = [x_fix, y_fix, z_fix]
-	
-	return calibrationValues
-	
-	
-def calibrateAxesValues(x, y, z):
-	global calibrationValues
-	
-	x += calibrationValues[0]
-	y += calibrationValues[1]
-	z += calibrationValues[2]
-	return (x, y, z)
-
-
-def getData():
-	(x, y, z) = myADXL.getAxes()
-	time = str(datetime.now())
-	(x, y, z) = calibrateAxesValues(x, y, z)
-	axesPacket = [x, y, z, time]
-	return axesPacket
-	
-def addToList(dataList, axesPacket):
-	dataList.append(axesPacket)
-	return dataList
-	
-def readAndAddToList(dataList, calibrationValues):
-	(x, y, z) = calibrateAxesValues(x, y, z, calibrationValues)
-	axesPacket = [x, y, z, timeRead]
-	dataList.append(axesPacket)
-	return dataList
-		
-def checkInputAnswer(input):
-	if float(input) == 0:
-		return False
-	else:
-		return True
-		
-def clearScreen():
-	os.system("clear")
-
 def mainUserInput():
 	global interval, counterMaxTime, counterMax, checkingForSignificance
 	
@@ -234,21 +232,7 @@ def mainUserInput():
 		
 		
 		clearScreen()
-
-def printSettings(title):
-	global interval, counterMaxTime, counterMax
-	global checkingForSignificance, significanceThresholds
-	global piID
 	
-	print ("\n######### " + title + " #########")
-	print ("RPi ID: " + piID)
-	print ("Interval: " + str(interval))
-	print ("Counts per file: " + str(counterMax) + " - approx: " + str(counterMaxTime) + " minutes")
-	print ("Checking for Significance - " + str(checkingForSignificance))
-	print ("Significance Thresholds - " + str(significanceThresholds))
-
-
-		
 def mainDisplayADXL():
 	global counter, counterMax, fileNumber
 	global dataList
