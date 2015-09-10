@@ -35,7 +35,7 @@ calibrationValues = [x_fix, y_fix, z_fix]
 # Value in g
 x_threshold = 0.4
 y_threshold = 0.4
-z_threshold = 1.4
+z_threshold = 0.4
 significanceThresholds = [x_threshold, y_threshold, z_threshold]
 checkingForSignificance = True
 
@@ -83,7 +83,7 @@ def generateDataID():
 def writeToDisk(dataList, interval, checking, piID):
 	global fileNumber
 	# Measure writing speed:
-	#timeStart = time.time()
+	# timeStart = time.time()
 	
 	fileUniqueID = generateDataID()
 	headerString = ('Pi_ID: ' + piID
@@ -98,14 +98,19 @@ def writeToDisk(dataList, interval, checking, piID):
 	else:
 		fileNumberWrite = fileNumber
 	
+	# Open log file
+	logDataFile = open('ADXLData/' + piID + '_log', 'a')
+	
 	# If prompted to check and list has NO significant values, record that no data was significant
 	if checking and checkListForSignificance(dataList) == False:
-		mainDataFile = open('ADXLData/ADXLdata_Insignificant', 'a')
-		mainDataFile.write("No significant data @ time: " + str(datetime.now()) + "\n")
-		mainDataFile.close()
-		print('[' + fileNumberWrite + '] NO Significant Data @ ' + str(datetime.now()))
+		logString = ('No significant data @ ' + str(datetime.now()))
+		logDataFile.write(logString + '\n')
+		print(logString)
+		
+		logDataFile.close()
 		return
 	
+	# Open data file
 	mainDataFile = open('ADXLData/'+ piID + '_data_' + str(fileNumberWrite), 'w')
 	fileNumber += 1
 	
@@ -117,12 +122,18 @@ def writeToDisk(dataList, interval, checking, piID):
 		(x, y, z, time) = getXYZtFromPacket(packet)
 		(x,y,z) = strConvertAxes(x,y,z)
 		mainDataFile.write(x + " " + y + " " + z + " " + str(time) + "\n")
-	
+		
 	mainDataFile.close()
+	
+	logString = ('[' + fileNumberWrite + '] File written @ ' + str(datetime.now()) + ' | ID: ' + fileUniqueID)
+	logDataFile.write(logString + '\n')
+	print(logString)
+	
+	logDataFile.close()
 	
 	# Print write speed
 	#print('File written @ ' + str(datetime.now()) + ' approx ' + str(time.time() - timeStart) + 's')
-	print('[' + fileNumberWrite + '] File written @ ' + str(datetime.now()) + ' | ID: ' + fileUniqueID)
+	
 
 
 def getCalibrationOffsets ():
@@ -151,7 +162,7 @@ def getCalibrationOffsets ():
 	
 	x_fix = (x_average / len(calibrateList))*-1
 	y_fix = (y_average / len(calibrateList))*-1
-	z_fix = ((z_average / len(calibrateList))*-1)+1
+	z_fix = (z_average / len(calibrateList))*-1
 	calibrationValues = [x_fix, y_fix, z_fix]
 	
 	return calibrationValues
@@ -199,26 +210,45 @@ def mainUserInput():
 		print ("######### RPi Online Smart Building Monitoring #########")
 		print ("Written by Lui Villarias")
 		
-		interval = float(input("\nEnter interval (s): "))
-		counterMaxTime = float(input("\nApproximate save interval (minutes): "))
-		counterMax = (counterMaxTime * 60) / interval # convert to counts
-		checkingForSignificance = checkInputAnswer(input("\nSave only significant data? (0,1): "))
+		if (checkInputAnswer(input("Use default testing values? (0,1) ")) == False):
 		
-		# DISPLAY INPUT RESPONSE
-		clearScreen()
-		print ("\n\n######### USER INPUT SUMMARY #########")
-		print ("\nInterval: " + str(interval))
-		print ("Counts per file: " + str(counterMax) + " - approx: " + str(counterMaxTime) + " minutes")
-		if (checkingForSignificance):
-			print ("Significance filter is ON")
+			interval = float(input("\nEnter interval (s): "))
+			counterMaxTime = float(input("\nApproximate save interval (minutes): "))
+			counterMax = (counterMaxTime * 60) / interval # convert to counts
+			checkingForSignificance = checkInputAnswer(input("\nSave only significant data? (0,1): "))
+		
 		else:
-			print ("Significance filter is OFF")
+		
+			interval = 0.01
+			counterMaxTime = 0.05
+			counterMax = (counterMaxTime * 60) / interval
+			checkingForSignificance = True
+		
+			# DISPLAY INPUT RESPONSE
+		clearScreen()
+		printSettings("USER INPUT SUMMARY")
 
 		if (checkInputAnswer(input("\nIS THIS CORRECT? (0,1) "))):
 			break
 		
+		
+		
 		clearScreen()
+
+def printSettings(title):
+	global interval, counterMaxTime, counterMax
+	global checkingForSignificance, significanceThresholds
+	global piID
 	
+	print ("\n######### " + title + " #########")
+	print ("RPi ID: " + piID)
+	print ("Interval: " + str(interval))
+	print ("Counts per file: " + str(counterMax) + " - approx: " + str(counterMaxTime) + " minutes")
+	print ("Checking for Significance - " + str(checkingForSignificance))
+	print ("Significance Thresholds - " + str(significanceThresholds))
+
+
+		
 def mainDisplayADXL():
 	global counter, counterMax, fileNumber
 	global dataList
@@ -226,9 +256,7 @@ def mainDisplayADXL():
 	global calibrationValues
 	global piID
 	
-	print ("\n\n######### MAINADXL RUNNING #########")
-	print ("\nInterval: " + str(interval))
-	print ("\nCounts per file: " + str(counterMax) + " - approx: " + str(counterMaxTime) + " minutes") 
+	printSettings("RPi_ADXL RUNNING")
 	print ("\nStarted @ " + str(datetime.now()) + "\n\n")
 	
 	# Using "try" to ignore count losses from I/O errors
