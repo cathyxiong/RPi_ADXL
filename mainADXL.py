@@ -17,10 +17,9 @@ interval = 0.1
 
 # Declare counters and counterError
 counter = 0
+counterError = 0
 counterMax = 0
 counterMaxTime = 0
-
-fileNumber = 1
 
 # Declare list to store data from accelerometer
 dataList = []
@@ -38,6 +37,10 @@ y_threshold = 0.4
 z_threshold = 0.4
 significanceThresholds = [x_threshold, y_threshold, z_threshold]
 checkingForSignificance = True
+
+# Declare axis information (for reference)
+# Up/Down, North/South, East/West
+axisOrientationInfo = ["z", "x", "y"]
 
 def addToList(dataList, axesPacket):
 	dataList.append(axesPacket)
@@ -143,6 +146,7 @@ def printSettings(title):
 	print ("Counts per file: " + str(counterMax) + " - approx: " + str(counterMaxTime) + " minutes")
 	print ("Checking for Significance - " + str(checkingForSignificance))
 	print ("Significance Thresholds - " + str(significanceThresholds))
+	print ("Axis Orientation (UP/DOWN, NORTH/SOUTH, EAST/WEST): " + str(axisOrientationInfo))
 
 def readAndAddToList(dataList, calibrationValues):
 	(x, y, z) = calibrateAxesValues(x, y, z, calibrationValues)
@@ -154,26 +158,19 @@ def strConvertAxes (x,y,z):
 	return (str(x),str(y),str(z))
 	
 def writeToDisk(dataList, interval, checking, piID):
-	global fileNumber
-	
-	fileUniqueID = generateDataID()
-	headerString = ('Pi_ID: ' + piID
-					+ '\nData_ID: ' + fileUniqueID
-					+ '\nSample rate: ' + str(interval)
-					+ '\nSamples: ' + str(len(dataList)) + '\n')
+	global counter, counterError
+	global axisOrientationInfo
 
-	# Format file numbering for 01, 02 ... 09 etc
-	if fileNumber < 10:
-		fileNumberWrite = '0' + str(fileNumber)
-	else:
-		fileNumberWrite = fileNumber
+	# Append date to filename
+	fileDate = datetime.now().strftime("[%Y-%m-%d_%H-%M-%S]")
 	
 	# Open log file
 	logDataFile = open('ADXLData/' + piID + '_log', 'a')
 	
 	# If prompted to check and list has NO significant values, record that no data was significant
 	if checking and checkListForSignificance(dataList) == False:
-		logString = ('No significant data @ ' + str(datetime.now()))
+		logString = ('No significant data @ ' + str(datetime.now())
+					+ ' | Lost: ' + str(counterError))
 		logDataFile.write(logString + '\n')
 		print(logString)
 		
@@ -181,8 +178,14 @@ def writeToDisk(dataList, interval, checking, piID):
 		return
 	
 	# Open data file
-	mainDataFile = open('ADXLData/'+ piID + '_data_' + str(fileNumberWrite), 'w')
-	fileNumber += 1
+	mainDataFile = open('ADXLData/'+ piID + '_data_' + fileDate, 'w')
+	
+	# Generate header string
+	headerString = ('Pi_ID: ' + piID
+					+ '\nSample rate: ' + str(interval)
+					+ '\nSamples: ' + str(len(dataList))
+					+ '\nLost: ' + str(counterError)
+					+ '\nOrientation (U/D, N/S, E/W): ' + str(axisOrientationInfo) + '\n')
 	
 	# Write header into text file
 	mainDataFile.write(headerString)
@@ -192,13 +195,16 @@ def writeToDisk(dataList, interval, checking, piID):
 		(x, y, z, time) = getXYZtFromPacket(packet)
 		(x,y,z) = strConvertAxes(x,y,z)
 		mainDataFile.write(x + " " + y + " " + z + " " + str(time) + "\n")
-		
+	
+	# Close mainDataFile
 	mainDataFile.close()
 	
-	logString = ('[' + fileNumberWrite + '] File written @ ' + str(datetime.now()) + ' | ID: ' + fileUniqueID)
+	# Enter log that data was successfully written
+	logString = ('File written @ ' + str(datetime.now())
+				+ ' | Lost: ' + str(counterError))
+				
 	logDataFile.write(logString + '\n')
 	print(logString)
-	
 	logDataFile.close()
 	
 def mainUserInput():
@@ -210,11 +216,25 @@ def mainUserInput():
 		
 		if (checkInputAnswer(input("Use default testing values? (0,1) ")) == False):
 		
+			# Ask for data frequency
 			interval = float(input("\nEnter interval (s): "))
+			
+			# Ask for save interval
 			counterMaxTime = float(input("\nApproximate save interval (minutes): "))
 			counterMax = (counterMaxTime * 60) / interval # convert to counts
+			
+			# Ask if significance thresholds will be used
 			checkingForSignificance = checkInputAnswer(input("\nSave only significant data? (0,1): "))
 		
+			# Ask which axis is pointing up
+			axisOrientationInfo[0] = input("\nUP/DOWN Axis: ")
+			
+			# Ask which axis is pointing north/south
+			axisOrientationInfo[1] = input("\nNORTH/SOUTH Axis: ")
+			
+			# Ask which axis is pointing east/west
+			axisOrientationInfo[2] = input("\nEAST/WEST Axis: ")
+			
 		else:
 		
 			interval = 0.01
@@ -228,8 +248,6 @@ def mainUserInput():
 
 		if (checkInputAnswer(input("\nIS THIS CORRECT? (0,1) "))):
 			break
-		
-		
 		
 		clearScreen()
 	
@@ -254,10 +272,12 @@ def mainDisplayADXL():
 				writeToDisk(dataList, interval, checkingForSignificance, piID)
 				dataList = []
 				counter = 0
+				counterError = 0
 			
 		except IOError:
-			# Ignore IOERROR
-			pointless = 0
+			counterError += 1
+			
+		
 		sleep(interval)
 	
 ## TO DO
