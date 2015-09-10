@@ -10,12 +10,14 @@ from time import *
 from datetime import datetime
 
 uploadQueue = deque()
-dataFolder = "ADXLData/"
+
 #dataFileNameList = []
 dataSentHistoryList = []
-piID = "RPi_Lui"
+
 FTPSession = 0
 
+dataFolder = "ADXLData/"
+piID = "RPi_Lui"
 
 interval = 0.5 # in minutes
 
@@ -25,9 +27,9 @@ def scanFolder(dataFolder):
 	uploadQueue = deque()
 	
 	dataFileNameList = glob(dataFolder + piID + "_data*")
-	print ("\nFiles found: " + str(dataFileNameList) + "\n")
+	print ("\nFiles found: " + str(len(dataFileNameList)) + "\n")
 	
-	print("Adding to queue...")
+	print("Populating queue...")	
 	for dataFileName in dataFileNameList:
 		if ((dataFileName in dataSentHistoryList) == False):
 			uploadQueue.append(dataFileName)
@@ -48,16 +50,17 @@ def connectFTP():
 	user = "lui"
 	pw = "quincy"
 	
-	
+	print("Attempting to connect to local FTP server...")
 	FTPSession = ftplib.FTP()
-	FTPSession.connect(ip, port)
+	FTPSession.connect(ip, port, 5)
 	FTPSession.login(user, pw)
 
 def disconnectFTP():
 	global FTPSession
 	FTPSession.quit()
+	print("Stopping connection with FTP server...")
 		
-def uploadFile(fileName):
+def uploadDataFile(fileName):
 	global FTPSession
 	
 	file = open(fileName, 'rb')
@@ -65,20 +68,38 @@ def uploadFile(fileName):
 	print(fileName + " uploaded")
 	addToSentHistoryList(fileName)
 	file.close()
-
+	
+def uploadLogFile():
+	global FTPSession
+	global dataFolder, piID
+	
+	fileName = (piID + "_log")
+	
+	logFile = open((dataFolder + fileName), 'rb')
+	FTPSession.storbinary(('STOR ' + fileName), logFile)
+	
+	print(fileName + " uploaded")
+	
+	logFile.close()
+	
 def uploadTheQueue(uploadQueue):
 	connectFTP()
 	
 	while uploadQueue:
-		uploadFile(uploadQueue.popleft())
+		uploadDataFile(uploadQueue.popleft())
 		
+	uploadLogFile()
 	disconnectFTP()
 
 def clearScreen():
 	os.system('clear')		
 
+	
 #### MAIN PROGRAM STARTS HERE
+clearScreen()
+
 # convert interval to seconds
+interval = float(input("How often to check and upload (in minutes): "))
 interval = interval * 60
 		
 # First scan the folder for files and grab files
@@ -94,7 +115,10 @@ while True:
 	# If queue has contents, upload them
 	if (uploadQueue):
 		print("\nUploading new files in queue...")
-		uploadTheQueue(uploadQueue)
+		try:
+			uploadTheQueue(uploadQueue)
+		except:
+			print("\n\n!!! Error while uploading")
 	else:
 		print("\nQueue empty!")
 
