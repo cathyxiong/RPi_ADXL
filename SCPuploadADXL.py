@@ -102,7 +102,7 @@ def scanFolder(dataFolder):
 def addToSentHistoryList(dataFileName):
 	dataSentHistoryList.append(dataFileName)
 
-def connectToSCPHost(username, remote):
+def connectToSCPHost(remote, username):
 	sshLocation = "/home/pi/.ssh/DOPrivateKeyOSSH"
 	
 	log("Connecting to SCP Session - " + username + "@" + remote)
