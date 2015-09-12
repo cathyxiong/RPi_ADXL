@@ -10,7 +10,7 @@ import random
 
 # Declare ADXL345 class from adxl345 library
 myADXL = i2c_adxl345.i2c_adxl345(1)
-piID = "RPi_Lui"
+piID = "RPi_Unassigned"
 
 # Interval controls how often we retrieve axes (seconds)
 interval = 0.1
@@ -135,6 +135,24 @@ def getData():
 	axesPacket = [x, y, z, time]
 	return axesPacket
 
+def getPiID():
+		# NOTE THAT THIS IS SHARED BY SCPupload.py 
+		# 	- move to another script as a library?
+	file = open("ADXLsettings.txt", "r")
+	
+	# Retrieve Pi ID
+	for line in file:
+		if ("piID=" in line):
+			file.close()
+			piID = line.split("=")[1]
+			return piID.strip()
+	
+	# Else throw error and terminate script
+	print("!!! - ERROR - getPiID - failed to retrieve PiID - TERMINATING")
+	sys.exit()
+	
+	return -1
+	
 def printSettings(title):
 	global interval, counterMaxTime, counterMax
 	global checkingForSignificance, significanceThresholds
@@ -251,7 +269,7 @@ def mainUserInput():
 		
 		clearScreen()
 	
-def mainDisplayADXL():
+def mainRPiADXL():
 	global counter, counterMax, fileNumber
 	global dataList
 	global significanceThresholds, checkingForSignificance
@@ -283,8 +301,13 @@ def mainDisplayADXL():
 ## TO DO
 # write switch axes function
 
-	
-###################################
+
+####################################################################################	
+#### MAIN PROGRAM STARTS HERE ######################################################
+
+####### Retrieve Pi ID
+piID = getPiID()
+input("PiID: " + piID + " (enter to continue)")
 
 ####### CALIBRATION
 # Get current values from resting ADXL345, average, and use to "calibrate"
@@ -298,4 +321,4 @@ clearScreen()
 #######
 
 # Do not clear screen here - leave a summary log per file written
-mainDisplayADXL()
+mainRPiADXL()
