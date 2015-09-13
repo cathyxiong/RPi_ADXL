@@ -43,6 +43,8 @@ def getLatestFile(dataFolder, piID):
 	dataFile = ""
 	
 	filelist = glob(dataFolder + piID + "/" + piID + "_data*")
+	if (len(fileList)==0):
+		return -1
 	
 	# file and datetime
 	filesAndDates = {}
@@ -116,18 +118,21 @@ while True:
 	
 	for piID in piIDList:
 		latestDataFile = getLatestFile(dataFolder, piID)
+		
+		if (latestDataFile != -1):
+			if (latestDataFile in filesAlreadyDrawn) == False:
+				# Parse data for x,y,z,time
+				print("Parsing data from " + latestDataFile)
+				(x, y, z, time) = parseData(latestDataFile)
 
-		if (latestDataFile in filesAlreadyDrawn) == False:
-			# Parse data for x,y,z,time
-			print("Parsing data from " + latestDataFile)
-			(x, y, z, time) = parseData(latestDataFile)
-
-			# Plot all three axes and save as png
-			print("Plotting all axes")
-			plotAxes(x, y, z, time, latestDataFile, piID)
-			filesAlreadyDrawn.append(latestDataFile)
+				# Plot all three axes and save as png
+				print("Plotting all axes")
+				plotAxes(x, y, z, time, latestDataFile, piID)
+				filesAlreadyDrawn.append(latestDataFile)
+			else:
+				print(latestDataFile + " has already been drawn!")
 		else:
-			print(latestDataFile + " has already been drawn!")
+			print("No files found for " + piID)
 		
 		
 	print("\nSleeping for " + str(interval) + " seconds")
