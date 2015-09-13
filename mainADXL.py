@@ -7,6 +7,7 @@ import time
 import os
 import random
 
+from configparser import ConfigParser
 
 # Declare ADXL345 class from adxl345 library
 myADXL = i2c_adxl345.i2c_adxl345(1)
@@ -135,18 +136,14 @@ def getData():
 	axesPacket = [x, y, z, time]
 	return axesPacket
 
-def getRPiSettings(getList = ["piID", "uploadUser", "uploadHost", "dataFolder"]):
-	file = open("ADXLsettings.txt", "r")
-	settings = {}
+def getRPiSettings(settingsLocation = "RPi_settings.ini"):
+	settings = ConfigParser()
+	settings.read(settingsLocation)
 	
-	# Retrieve Pi ID
-	# Strip used to remove \n from line
-	for line in file:
-		for type in getList:
-			if ((type in line) and (type in getList)):
-				settings[type] = (line.split("=")[1]).strip()
-				
-	return settings
+	settingsDict = {}
+	settingsDict["piID"] = settings["RPi"]["piID"]
+	
+	return settingsDict
 	
 def printSettings(title):
 	global interval, counterMaxTime, counterMax
@@ -301,7 +298,7 @@ def mainRPiADXL():
 #### MAIN PROGRAM STARTS HERE ######################################################
 
 ####### Retrieve Pi ID
-piID = getRPiSettings(["piID"])["piID"]
+piID = getRPiSettings()["piID"]
 input("PiID: " + piID + " (enter to continue)")
 
 ####### CALIBRATION
