@@ -145,7 +145,7 @@ while True:
 	clearScreen()
 	print("\n######### uploadADXL (SCP) running #########\n")
 	printUploadSettings(settings)
-	print("Uploading every " + str(interval) + " minutes")
+	print("Uploading every " + str(interval/60) + " minutes")
 	
 	# Scan folder for new files to send out
 	print("Scanning folder and populating upload queue...")
