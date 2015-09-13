@@ -4,6 +4,7 @@
 #########
 
 from collections import deque
+from configparser import ConfigParser
 import os
 import sys
 from time import *
@@ -20,18 +21,31 @@ uploadQueue = deque()
 dataSentHistoryList = []
 logList = []
 
-def getRPiSettings(getList = ["piID", "uploadUser", "uploadHost", "dataFolder"]):
-	file = open("ADXLsettings.txt", "r")
-	settings = {}
+#def getRPiSettings(getList = ["piID", "uploadUser", "uploadHost", "dataFolder"]):
+	#file = open("ADXLsettings.txt", "r")
+	#settings = {}
 	
 	# Retrieve Pi ID
 	# Strip used to remove \n from line
-	for line in file:
-		for type in getList:
-			if ((type in line) and (type in getList)):
-				settings[type] = (line.split("=")[1]).strip()
-				
-	return settings
+	#for line in file:
+	#	for type in getList:
+	#		if ((type in line) and (type in getList)):
+	#			settings[type] = (line.split("=")[1]).strip()
+	#			
+	#return settings
+	
+def getRPiSettings(settingsLocation = "RPi_settings.ini"):
+	settings = ConfigParser()
+	settings.read(settingsLocation)
+	
+	settingsDict = {}
+	settingsDict["piID"] = settings["RPi"]["piID"]
+	settingsDict["uploadUser"] = settings["Upload"]["uploadUser"]
+	settingsDict["uploadHost"] = settings["Upload"]["uploadHost"]
+	settingsDict["dataFolder"] = settings["Upload"]["dataFolder"]
+	
+	return settingsDict
+
 
 def printUploadSettings(settings):
 	print("[UPLOADADXL SETTINGS]")
@@ -129,6 +143,7 @@ clearScreen()
 # Retrieve all settings for upload
 settings = getRPiSettings()
 
+# Assign settings to variables
 piID = settings["piID"]
 dataFolder = settings["dataFolder"]
 uploadUser = settings["uploadUser"]
