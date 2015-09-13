@@ -43,7 +43,7 @@ def getLatestFile(dataFolder, piID):
 	dataFile = ""
 	
 	filelist = glob(dataFolder + piID + "/" + piID + "_data*")
-	if (len(fileList)==0):
+	if (len(filelist)==0):
 		return -1
 	
 	# file and datetime
