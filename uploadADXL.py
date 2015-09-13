@@ -20,19 +20,6 @@ uploadQueue = deque()
 
 dataSentHistoryList = []
 logList = []
-
-#def getRPiSettings(getList = ["piID", "uploadUser", "uploadHost", "dataFolder"]):
-	#file = open("ADXLsettings.txt", "r")
-	#settings = {}
-	
-	# Retrieve Pi ID
-	# Strip used to remove \n from line
-	#for line in file:
-	#	for type in getList:
-	#		if ((type in line) and (type in getList)):
-	#			settings[type] = (line.split("=")[1]).strip()
-	#			
-	#return settings
 	
 def getRPiSettings(settingsLocation = "RPi_settings.ini"):
 	settings = ConfigParser()
