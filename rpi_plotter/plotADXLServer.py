@@ -7,16 +7,36 @@ import matplotlib
 matplotlib.use("Agg") 
 
 import os
+from ConfigParser import ConfigParser
 from time import *
 import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime
 from glob import glob
 
-
+# init default values
 dataFolder = "/root/RPi_ADXL_Storage/"
 piIDList = ["RPi-Lui", "RPi-Denny"]
 filesAlreadyDrawn = []
+
+def getPlotterSettings(location = "plot_settings.ini"):
+	# Use ConfigParser to parse from .ini file for settings
+	settings = ConfigParser()
+	settings.read(location)
+	
+	dataFolder = settings.get("PlotSettings", "dataFolder")
+	saveLocation = settings.get("PlotSettings", "saveLocation")
+	piIDList = settings.get("PlotSettings", "piIDList").split(",")
+
+	return (dataFolder, saveLocation, piIDList)
+	
+def printPlotterSettings():
+	print("[Plotter Settings]")
+	print("dataFolder: " + dataFolder)
+	print("saveLocation: " + saveLocation)
+	print("piIDList:")
+	print(piIDList)
+	print("\n")
 
 def getLatestFile(dataFolder, piID):
 	# Scan folder for latest file and then plot that file
@@ -84,6 +104,9 @@ def clearScreen():
 ######################################################################################################	 
 #### MAIN PROGRAM STARTS HERE ########################################################################	
 clearScreen()
+(dataFolder, saveLocation, piIDList) = getPlotterSettings()
+printPlotterSettings()
+
 interval = float(input("How often are we checking for new files to plot? (in seconds)"))
 
 while True:
