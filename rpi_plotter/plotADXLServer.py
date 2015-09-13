@@ -14,15 +14,15 @@ from datetime import datetime
 from glob import glob
 
 
-dataFolder = "/root/RPi_ADXL_Storage/RPi-Lui/"
-piID = "RPi-Lui"
+dataFolder = "/root/RPi_ADXL_Storage/"
+piIDList = ["RPi-Lui", "RPi-Denny"]
 filesAlreadyDrawn = []
 
-def getLatestFile(dataFolder):
+def getLatestFile(dataFolder, piID):
 	# Scan folder for latest file and then plot that file
 	dataFile = ""
 	
-	filelist = glob(dataFolder + piID + "_data*")
+	filelist = glob(dataFolder + piID + "/" + piID + "_data*")
 	
 	# file and datetime
 	filesAndDates = {}
@@ -66,14 +66,14 @@ def parseData(latestDataFile):
 	
 	return x, y, z, time
 
-def plotAxes(x, y, z, time, latestDataFile, location = "/var/www/104.236.141.183/public_html/RPi_ADXL_Storage/RPi-Lui/"):
+def plotAxes(x, y, z, time, latestDataFile, piID, location = "/var/www/104.236.141.183/public_html/RPi_ADXL_Storage/"):
 	dict = {"x": x, "y": y, "z": z}
 	
 	for axis in dict:
 		print("Plotting axis " + axis)
 		plt.plot(time, dict[axis])
 		plt.title(axis + ": " + latestDataFile)
-		plt.savefig(location + "plot_" + axis + ".png")
+		plt.savefig(location + piID + "/plot_" + axis + ".png")
 		plt.clf()
 		
 	return True
@@ -90,19 +90,22 @@ while True:
 	clearScreen()
 	# Retrieve latest file in the designated storage folder
 	print("Grabbing latest file")
-	latestDataFile = getLatestFile(dataFolder)
-
-	if (latestDataFile in filesAlreadyDrawn) == False:
-		# Parse data for x,y,z,time
-		print("Parsing data from " + latestDataFile)
-		(x, y, z, time) = parseData(latestDataFile)
-
-		# Plot all three axes and save as png
-		print("Plotting all axes")
-		plotAxes(x, y, z, time, latestDataFile)
-		filesAlreadyDrawn.append(latestDataFile)
-	else:
-		print(latestDataFile + " has already been drawn!")
 	
+	for piID in piIDList:
+		latestDataFile = getLatestFile(dataFolder, piID)
+
+		if (latestDataFile in filesAlreadyDrawn) == False:
+			# Parse data for x,y,z,time
+			print("Parsing data from " + latestDataFile)
+			(x, y, z, time) = parseData(latestDataFile)
+
+			# Plot all three axes and save as png
+			print("Plotting all axes")
+			plotAxes(x, y, z, time, latestDataFile, piID)
+			filesAlreadyDrawn.append(latestDataFile)
+		else:
+			print(latestDataFile + " has already been drawn!")
+		
+		
 	print("\nSleeping for " + str(interval) + " seconds")
 	sleep(interval)
