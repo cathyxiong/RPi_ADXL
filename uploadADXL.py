@@ -99,9 +99,10 @@ def connectToSCPHost(remote, username):
 def disconnectFromSCPHost(SCPSession):
 	return SCPSession.close()
 	
-def uploadFile(fileName, SCPSession, location = "/var/www/104.236.141.183/public_html/RPi_ADXL_Storage/"):
+def uploadFile(fileName, SCPSession, location = "/root/RPi_ADXL_Storage/"):
 	# Default location set to public_html folder on remote server - for index view
 	# location = "/root/RPi_ADXL_Storage/"
+	# location = "/var/www/104.236.141.183/public_html/RPi_ADXL_Storage/"
 	log("Uploading " + fileName)
 	try:
 		localFile = plumbum.local.path(fileName)
