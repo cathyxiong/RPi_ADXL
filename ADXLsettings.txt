@@ -1,4 +1,5 @@
 piID=RPi-Lui
 uploadUser=root
 uploadHost=104.236.141.183
+dataFolder=ADXLData/
 # Make sure the line above has no whitespace

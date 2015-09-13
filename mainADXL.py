@@ -135,23 +135,18 @@ def getData():
 	axesPacket = [x, y, z, time]
 	return axesPacket
 
-def getPiID():
-		# NOTE THAT THIS IS SHARED BY SCPupload.py 
-		# 	- move to another script as a library?
+def getRPiSettings(getList = ["piID", "uploadUser", "uploadHost", "dataFolder"]):
 	file = open("ADXLsettings.txt", "r")
+	settings = {}
 	
 	# Retrieve Pi ID
+	# Strip used to remove \n from line
 	for line in file:
-		if ("piID=" in line):
-			file.close()
-			piID = line.split("=")[1]
-			return piID.strip()
-	
-	# Else throw error and terminate script
-	print("!!! - ERROR - getPiID - failed to retrieve PiID - TERMINATING")
-	sys.exit()
-	
-	return -1
+		for type in getList:
+			if ((type in line) and (type in getList)):
+				settings[type] = (line.split("=")[1]).strip()
+				
+	return settings
 	
 def printSettings(title):
 	global interval, counterMaxTime, counterMax
@@ -306,7 +301,7 @@ def mainRPiADXL():
 #### MAIN PROGRAM STARTS HERE ######################################################
 
 ####### Retrieve Pi ID
-piID = getPiID()
+piID = getRPiSettings(["piID"])["piID"]
 input("PiID: " + piID + " (enter to continue)")
 
 ####### CALIBRATION

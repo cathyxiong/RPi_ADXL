@@ -15,54 +15,31 @@ from glob import glob
 # plumbum used for uploading via ssh SCP (must be downloaded via pip)
 import plumbum
 
+uploadQueue = deque()
 
 dataSentHistoryList = []
-uploadQueue = deque()
-dataFolder = "ADXLData/"
-piID = "RPi-Unassigned"
 logList = []
 
-uploadUser = ""
-uploadHost = ""
-
-interval = 0.5 # in minutes
-
-def getPiID():
-		# NOTE THAT THIS IS SHARED BY SCPupload.py 
-		# 	- move to another script as a library?
+def getRPiSettings(getList = ["piID", "uploadUser", "uploadHost", "dataFolder"]):
 	file = open("ADXLsettings.txt", "r")
+	settings = {}
 	
 	# Retrieve Pi ID
 	# Strip used to remove \n from line
 	for line in file:
-		if ("piID=" in line):
-			file.close()
-			piID = line.split("=")[1]
-			return piID.strip()
-	
-	# Else throw error and terminate script
-	print("!!! - ERROR - getPiID - failed to retrieve PiID - TERMINATING")
-	sys.exit()
-	
-	return -1
-	
-def getUploadSettings():
-	file = open("ADXLsettings.txt", "r")
-	uploadUser = ""
-	uploadHost = ""
-	
-	# Strip used to remove \n from line
-	for line in file:
-		if ("uploadUser=" in line):
-			uploadUser = (line.split("=")[1]).strip()
-		if ("uploadHost=" in line):
-			uploadHost = (line.split("=")[1]).strip()
-	
-	if (uploadUser == "" or uploadHost == ""):
-		log("!!! - ERROR - getUploadSettings() - could not retrieve user or host")
-		return -1
-	
-	return uploadUser, uploadHost
+		for type in getList:
+			if ((type in line) and (type in getList)):
+				settings[type] = (line.split("=")[1]).strip()
+				
+	return settings
+
+def printUploadSettings(settings):
+	print("[UPLOADADXL SETTINGS]")
+	print("piID: " + settings["piID"])
+	print("Uploading to: " + settings["uploadUser"] + "@" + settings["uploadHost"])
+	print("Local data folder: " + settings["dataFolder"])
+	print("\n")
+		
 
 def log(description, save = True, printScreen = True):
 	if (save):
@@ -144,29 +121,37 @@ def uploadTheQueue(uploadQueue, SCPSession):
 def clearScreen():
 	os.system('clear')		
 
-####################################################################################	
-#### MAIN PROGRAM STARTS HERE ######################################################
+######################################################################################################	 
+#### MAIN PROGRAM STARTS HERE ########################################################################
 clearScreen()
 
-# Retrieve Pi ID
-piID = getPiID()
-(uploadUser, uploadHost) = getUploadSettings()
-print("Uploading to " + uploadUser + "@" + uploadHost)
-input("PiID: " + piID + " (enter to continue)")
+# Retrieve all settings for upload
+settings = getRPiSettings()
+
+piID = settings["piID"]
+dataFolder = settings["dataFolder"]
+uploadUser = settings["uploadUser"]
+uploadHost = settings["uploadHost"]
+
+# Print out settings
+printUploadSettings(settings)
+input("Press [ENTER] to continue . . .")
 
 # Ask how often we should try to upload
-interval = float(input("How often to check and upload (in minutes): ")) * 60
+interval = float(input("\nHow often to check and upload (in minutes): ")) * 60
 		
 # First scan the folder for files and grab files
 while True:
 	clearScreen()
-
-	print ("\n######### uploadADXL (SCP) running #########\n")
+	print("\n######### uploadADXL (SCP) running #########\n")
+	printUploadSettings(settings)
+	print("Uploading every " + str(interval) + " minutes")
 	
 	# Scan folder for new files to send out
 	print("Scanning folder and populating upload queue...")
 	uploadQueue = scanFolder(dataFolder)
 	
+	# Connect to remote host
 	SCPSession = connectToSCPHost(uploadHost, uploadUser)
 	
 	# Only attempt any upload if connection was established
@@ -188,9 +173,8 @@ while True:
 		log("Upload complete")	
 		SCPSession = disconnectFromSCPHost(SCPSession)
 
-	print("\n\nSleeping until next upload interval...")
 	print("Slept @ " + str(datetime.now()))
-	print("Interval: " + str(interval/60) + " minutes")
+	print("\n\nSleeping until next upload interval...")
 	
 	sleep(interval)
 
