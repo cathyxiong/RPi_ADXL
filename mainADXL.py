@@ -8,6 +8,9 @@ import os
 import random
 
 from configparser import ConfigParser
+from collections import deque
+
+# DECLARE ALL VARIABLES FOR NEATNESS ####################!!!!!!!!!!!!!!!!!#################
 
 # Declare ADXL345 class from adxl345 library
 myADXL = i2c_adxl345.i2c_adxl345(1)
@@ -37,15 +40,11 @@ x_threshold = 0.4
 y_threshold = 0.4
 z_threshold = 0.4
 significanceThresholds = [x_threshold, y_threshold, z_threshold]
-checkingForSignificance = True
+checkForSignificance = True
 
 # Declare axis information (for reference)
 # Up/Down, North/South, East/West
 axisOrientationInfo = ["z", "x", "y"]
-
-def addToList(dataList, axesPacket):
-	dataList.append(axesPacket)
-	return dataList
 
 def checkListForSignificance(dataList):
 	global significanceThresholds
@@ -63,12 +62,14 @@ def checkListForSignificance(dataList):
 			return True
 	return False
 
-def checkInputAnswer(input):
-	if float(input) == 0:
-		return False
+def checkUserAnswer(input):
+	yes = ["yes", "ye", "y", "1", "ok"]
+	
+	if (input.lower() in yes):
+		return True
 	else:
-		return True	
-		
+		return False
+	
 def clearScreen():
 	os.system('clear')
 
@@ -143,33 +144,57 @@ def getRPiSettings(settingsLocation = "RPi_settings.ini"):
 	settingsDict = {}
 	settingsDict["piID"] = settings["RPi"]["piID"]
 	
+	# Distinguish between strings/numbres/boolean so we can convert them
+	settingsToGrabNumbers = ["adxl_interval", "save_interval", "x_thresh", "y_thresh", "z_thresh"]
+	settingsToGrabStrings = ["up_orient", "east_orient", "north_orient"]
+	settingsToGrabBoolean = ["checkForSignificance"]
+	
+	for type in settingsToGrabStrings:
+		settingsDict[type] = settings["Main"][type]
+		
+	for type in settingsToGrabNumbers:
+		settingsDict[type] = float(settings["Main"][type])
+		
+	for type in settingsToGrabBoolean:
+		settingsDict[type] = (settings["Main"][type] == "True")
+	
+	settingsDict["counterMax"] = (settingsDict["save_interval"]*60)/settingsDict["adxl_interval"]
+	
 	return settingsDict
+
+def applyRPiSettings(settings):
+	# Translate to normal variables for readability
+	# It pains me to use these global variables
+	global piID, interval, counterMaxTime, counterMax, checkForSignificance
+	global significanceThresholds, axisOrientationInfo
+	
+	piID = settings["piID"]
+	interval = settings["adxl_interval"]
+	counterMaxTime = settings["save_interval"]
+	counterMax = (counterMaxTime*60)/interval
+	checkForSignificance = settings["checkForSignificance"]
+	significanceThresholds = [settings["x_thresh"], settings["y_thresh"], settings["z_thresh"]]
+	axisOrientationInfo = [settings["up_orient"], settings["north_orient"], settings["east_orient"]]
 	
 def printSettings(title):
-	global interval, counterMaxTime, counterMax
-	global checkingForSignificance, significanceThresholds
-	global piID
+	# This DOES NOT print whatever is in the settings dict
+	# This is for printing the actual variables currently being used by the program
+	# to make sure that the user is fully aware what values are ACTUALLY being used
 	
 	print ("\n######### " + title + " #########")
 	print ("RPi ID: " + piID)
 	print ("Interval: " + str(interval))
 	print ("Counts per file: " + str(counterMax) + " - approx: " + str(counterMaxTime) + " minutes")
-	print ("Checking for Significance - " + str(checkingForSignificance))
+	print ("Checking for Significance - " + str(checkForSignificance))
 	print ("Significance Thresholds - " + str(significanceThresholds))
 	print ("Axis Orientation (UP/DOWN, NORTH/SOUTH, EAST/WEST): " + str(axisOrientationInfo))
-
-def readAndAddToList(dataList, calibrationValues):
-	(x, y, z) = calibrateAxesValues(x, y, z, calibrationValues)
-	axesPacket = [x, y, z, timeRead]
-	dataList.append(axesPacket)
-	return dataList
 	
 def strConvertAxes (x,y,z):
 	return (str(x),str(y),str(z))
 	
-def writeToDisk(dataList, interval, checking, piID):
+def writeToDisk(dataList, settings):
 	global counter, counterError
-	global axisOrientationInfo
+	global axisOrientationInfo	
 
 	# Append date to filename
 	fileDate = datetime.now().strftime("[%Y-%m-%d_%H-%M-%S]")
@@ -178,7 +203,7 @@ def writeToDisk(dataList, interval, checking, piID):
 	logDataFile = open('ADXLData/' + piID + '_log', 'a')
 	
 	# If prompted to check and list has NO significant values, record that no data was significant
-	if checking and checkListForSignificance(dataList) == False:
+	if checkForSignificance and (checkListForSignificance(dataList) == False):
 		logString = ('No significant data @ ' + str(datetime.now())
 					+ ' | Lost: ' + str(counterError))
 		logDataFile.write(logString + '\n')
@@ -217,78 +242,32 @@ def writeToDisk(dataList, interval, checking, piID):
 	print(logString)
 	logDataFile.close()
 	
-def mainUserInput():
-	global interval, counterMaxTime, counterMax, checkingForSignificance
-	
+def userInputDialog(settings):
 	while True:
+		clearScreen()
 		print ("######### RPi Online Smart Building Monitoring #########")
 		print ("Written by Lui Villarias")
 		
-		if (checkInputAnswer(input("Use default testing values? (0,1) ")) == False):
+		printSettings("DEFAULT mainADXL SETTINGS")
 		
-			# Ask for data frequency
-			interval = float(input("\nEnter interval (s): "))
-			
-			# Ask for save interval
-			counterMaxTime = float(input("\nApproximate save interval (minutes): "))
-			counterMax = (counterMaxTime * 60) / interval # convert to counts
-			
-			# Ask if significance thresholds will be used
-			checkingForSignificance = checkInputAnswer(input("\nSave only significant data? (0,1): "))
-		
-			# Ask which axis is pointing up
-			axisOrientationInfo[0] = input("\nUP/DOWN Axis: ")
-			
-			# Ask which axis is pointing north/south
-			axisOrientationInfo[1] = input("\nNORTH/SOUTH Axis: ")
-			
-			# Ask which axis is pointing east/west
-			axisOrientationInfo[2] = input("\nEAST/WEST Axis: ")
-			
-		else:
-		
-			interval = 0.01
-			counterMaxTime = 0.05
-			counterMax = (counterMaxTime * 60) / interval
-			checkingForSignificance = True
-		
-			# DISPLAY INPUT RESPONSE
-		clearScreen()
-		printSettings("USER INPUT SUMMARY")
-
-		if (checkInputAnswer(input("\nIS THIS CORRECT? (0,1) "))):
+		if (checkUserAnswer(input("\n>> Use these values? (y\\n): "))):
 			break
 		
-		clearScreen()
-	
-def mainRPiADXL():
-	global counter, counterMax, fileNumber
-	global dataList
-	global significanceThresholds, checkingForSignificance
-	global calibrationValues
-	global piID
-	
-	printSettings("RPi_ADXL RUNNING")
-	print ("\nStarted @ " + str(datetime.now()) + "\n\n")
-	
-	# Using "try" to ignore count losses from I/O errors
-	while True:
-		try:	
-			# Grab axes values from ADXL and add to dataList
-			dataList = addToList(dataList, getData())
-			counter += 1
-			
-			if counter > counterMax:
-				writeToDisk(dataList, interval, checkingForSignificance, piID)
-				dataList = []
-				counter = 0
-				counterError = 0
-			
-		except IOError:
-			counterError += 1
-			
+		# Ask for data frequency
+		settings["adxl_interval"] = float(input("\n>> Enter interval (s): "))
 		
-		sleep(interval)
+		# Ask for save interval
+		settings["save_interval"] = float(input("\n>> Approximate save interval (minutes): "))
+		settings["counterMax"] = (settings["save_interval"] * 60) / settings["adxl_interval"] # convert to counts
+		
+		# Ask if significance thresholds will be used
+		settings["checkForSignificance"] = checkUserAnswer(input("\n>> Save only significant data? (y\\n): "))
+		
+		applyRPiSettings(settings)
+		
+	return settings
+	
+	
 	
 ## TO DO
 # write switch axes function
@@ -297,9 +276,9 @@ def mainRPiADXL():
 ####################################################################################	
 #### MAIN PROGRAM STARTS HERE ######################################################
 
-####### Retrieve Pi ID
-piID = getRPiSettings()["piID"]
-input("PiID: " + piID + " (enter to continue)")
+####### Retrieve settings.ini values
+settings = getRPiSettings()
+applyRPiSettings(settings)
 
 ####### CALIBRATION
 # Get current values from resting ADXL345, average, and use to "calibrate"
@@ -308,9 +287,30 @@ clearScreen()
 #######
 
 ####### INPUT INITIAL VALUES
-mainUserInput()
+settings = userInputDialog(settings)
 clearScreen()
 #######
 
+####### INITIATE MAIN PROGRAM LOOP
 # Do not clear screen here - leave a summary log per file written
-mainRPiADXL()
+printSettings("RPi_ADXL RUNNING")
+print ("\nStarted @ " + str(datetime.now()) + "\n\n")
+
+# Using "try" to ignore count losses from I/O errors
+while True:
+	try:	
+		# Grab axes values from ADXL and add to dataList
+		dataList.append(getData())
+		counter += 1
+		
+		if counter > counterMax:
+			writeToDisk(dataList, settings)
+			dataList = []
+			counter = 0
+			counterError = 0
+		
+	except IOError:
+		counterError += 1
+		
+	
+sleep(interval)

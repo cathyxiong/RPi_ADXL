@@ -16,6 +16,8 @@ from glob import glob
 # plumbum used for uploading via ssh SCP (must be downloaded via pip)
 import plumbum
 
+# DECLARE ALL VARIABLES FOR NEATNESS ####################!!!!!!!!!!!!!!!!!#################
+
 # declare uploadQueue
 uploadQueue = deque()
 
