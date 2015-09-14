@@ -291,7 +291,8 @@ applyRPiSettings(settings)
 
 ####### CALIBRATION
 # Get current values from resting ADXL345, average, and use to "calibrate"
-calibrationValues = getCalibrationOffsets()
+if (generateZeroData == False):
+	calibrationValues = getCalibrationOffsets()
 clearScreen()	
 #######
 
