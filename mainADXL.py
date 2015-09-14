@@ -46,6 +46,9 @@ checkForSignificance = True
 # Up/Down, North/South, East/West
 axisOrientationInfo = ["z", "x", "y"]
 
+# Ensure this is defaulted to false
+generateZeroData = False
+
 def checkListForSignificance(dataList):
 	global significanceThresholds
 	x_threshold = significanceThresholds[0]
@@ -74,8 +77,6 @@ def clearScreen():
 	os.system('clear')
 
 def calibrateAxesValues(x, y, z):
-	global calibrationValues
-	
 	x += calibrationValues[0]
 	y += calibrationValues[1]
 	z += calibrationValues[2]
@@ -160,13 +161,21 @@ def getRPiSettings(settingsLocation = "RPi_settings.ini"):
 	
 	settingsDict["counterMax"] = (settingsDict["save_interval"]*60)/settingsDict["adxl_interval"]
 	
+	# Seperating this to keep this setting secret
+	# Meaning "generateZeroData" can be omitted from .ini
+
+	if "generateZeroData" in settings["Main"]:
+		settingsDict["generateZeroData"] = (settings["Main"]["generateZeroData"] == "True")
+	else:
+		settingsDict["generateZeroData"] = False
+	
 	return settingsDict
 
 def applyRPiSettings(settings):
 	# Translate to normal variables for readability
 	# It pains me to use these global variables
 	global piID, interval, counterMaxTime, counterMax, checkForSignificance
-	global significanceThresholds, axisOrientationInfo
+	global significanceThresholds, axisOrientationInfo, generateZeroData
 	
 	piID = settings["piID"]
 	interval = settings["adxl_interval"]
@@ -175,6 +184,7 @@ def applyRPiSettings(settings):
 	checkForSignificance = settings["checkForSignificance"]
 	significanceThresholds = [settings["x_thresh"], settings["y_thresh"], settings["z_thresh"]]
 	axisOrientationInfo = [settings["up_orient"], settings["north_orient"], settings["east_orient"]]
+	generateZeroData = settings["generateZeroData"]
 	
 def printSettings(title):
 	# This DOES NOT print whatever is in the settings dict
@@ -188,6 +198,10 @@ def printSettings(title):
 	print ("Checking for Significance - " + str(checkForSignificance))
 	print ("Significance Thresholds - " + str(significanceThresholds))
 	print ("Axis Orientation (UP/DOWN, NORTH/SOUTH, EAST/WEST): " + str(axisOrientationInfo))
+
+	# Print a warning if we're generating zero data
+	if generateZeroData:
+		print("!! - WARNING - NOT GENERATING ACTUAL ADXL DATA !!!")
 	
 def strConvertAxes (x,y,z):
 	return (str(x),str(y),str(z))
@@ -300,7 +314,11 @@ print ("\nStarted @ " + str(datetime.now()) + "\n\n")
 while True:
 	try:	
 		# Grab axes values from ADXL and add to dataList
-		dataList.append(getData())
+		if (generateZeroData == False):
+			dataList.append(getData())
+		else:
+			dataList.append([0,0,0,str(datetime.now())])
+			
 		counter += 1
 		
 		if counter > counterMax:
