@@ -49,9 +49,19 @@ def getLatestFile(dataFolder, piID):
 	# file and datetime
 	filesAndDates = {}
 	
+	
+	
 	for file in filelist:
 		# Parse filename for date
-		filename = (file.split("/"))[5]
+		filename = (file.split("/"))
+		
+		# Dynamically search for the correct element containing
+		# the filename
+		for element in filename:
+			if "_data_[" in element:
+				filename = element
+				break
+		
 		filedate = (filename.split("["))[1]
 		filedate = (filedate.split("]"))[0]
 		filedate = datetime.strptime(filedate, "%Y-%m-%d_%H-%M-%S")
