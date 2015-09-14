@@ -16,8 +16,10 @@ from glob import glob
 # plumbum used for uploading via ssh SCP (must be downloaded via pip)
 import plumbum
 
+# declare uploadQueue
 uploadQueue = deque()
 
+# declare lists for files sent before & log for filewriting
 dataSentHistoryList = []
 logList = []
 	
@@ -29,6 +31,7 @@ def getRPiSettings(settingsLocation = "RPi_settings.ini"):
 	settingsDict["piID"] = settings["RPi"]["piID"]
 	settingsDict["uploadUser"] = settings["Upload"]["uploadUser"]
 	settingsDict["uploadHost"] = settings["Upload"]["uploadHost"]
+	settingsDict["uploadDirectory"] = settings["Upload"]["uploadDirectory"]
 	settingsDict["dataFolder"] = settings["Upload"]["dataFolder"]
 	
 	return settingsDict
@@ -38,6 +41,7 @@ def printUploadSettings(settings):
 	print("[UPLOADADXL SETTINGS]")
 	print("piID: " + settings["piID"])
 	print("Uploading to: " + settings["uploadUser"] + "@" + settings["uploadHost"])
+	print("Remote data folder: " + settings["uploadDirectory"])
 	print("Local data folder: " + settings["dataFolder"])
 	print("\n")
 		
@@ -81,11 +85,15 @@ def scanFolder(dataFolder):
 		
 	return uploadQueue
 	
+	
 def addToSentHistoryList(dataFileName):
 	dataSentHistoryList.append(dataFileName)
 
+	
 def connectToSCPHost(remote, username):
-	sshLocation = "/home/pi/.ssh/DOPrivateKeyOSSH"
+	# Locate SSH private key for uploading to server
+	sshLocation = "/home/pi/.ssh/upload"
+	#sshLocation = "/home/pi/.ssh/DOPrivateKeyOSSH"
 	
 	log("Connecting to SCP Session - " + username + "@" + remote)
 	try:
@@ -100,29 +108,32 @@ def connectToSCPHost(remote, username):
 def disconnectFromSCPHost(SCPSession):
 	return SCPSession.close()
 	
-def uploadFile(fileName, SCPSession, location = "/root/RPi_ADXL_Storage/"):
-	# Default location set to public_html folder on remote server - for index view
-	# location = "/root/RPi_ADXL_Storage/"
-	# location = "/var/www/104.236.141.183/public_html/RPi_ADXL_Storage/"
+	
+def uploadFile(fileName, SCPSession, location):
 	log("Uploading " + fileName)
 	try:
 		localFile = plumbum.local.path(fileName)
 		remoteDestination = SCPSession.path(location + piID + "/")
 		plumbum.path.utils.copy(localFile, remoteDestination)
-	except:
-		log("!!! - ERROR - uploadFile() - failed to upload " + fileName)
+	except Exception as e:
+		log("!!! - ERROR - uploadFile() failed to upload " + fileName)
+		print(e)
 	
 	addToSentHistoryList(fileName)
 	
-def uploadTheQueue(uploadQueue, SCPSession):
+	
+def uploadTheQueue(uploadQueue, SCPSession, uploadDirectory):
 	# Upload entire queue
 	log("Uploading [" + str(len(uploadQueue)) + "] data files in queue...")
+	log("Uploading to remote server in " + uploadDirectory)
 	while uploadQueue:
-		uploadFile(uploadQueue.popleft(), SCPSession)
+		uploadFile(uploadQueue.popleft(), SCPSession, location=uploadDirectory)
 
+		
 def clearScreen():
 	os.system('clear')		
 
+	
 ######################################################################################################	 
 #### MAIN PROGRAM STARTS HERE ########################################################################
 clearScreen()
@@ -135,6 +146,7 @@ piID = settings["piID"]
 dataFolder = settings["dataFolder"]
 uploadUser = settings["uploadUser"]
 uploadHost = settings["uploadHost"]
+uploadDirectory = settings["uploadDirectory"]
 
 # Print out settings
 printUploadSettings(settings)
@@ -157,23 +169,23 @@ while True:
 	# Connect to remote host
 	SCPSession = connectToSCPHost(uploadHost, uploadUser)
 	
-	# Only attempt any upload if connection was established
+	# Do NOT upload if connection failed to resolve
 	if (SCPSession != -1):
-		# If queue has contents, upload them
 		if (uploadQueue):
 			print("\nUploading new files in queue...")
-			# Upload the queue of data files and then upload data log
-			uploadTheQueue(uploadQueue, SCPSession)
+			uploadTheQueue(uploadQueue, SCPSession, uploadDirectory)
 			
 		else:
 			print("\nQueue empty!")
 
+		# Dump log to file, then clear local log
 		writeLog()
+		logList = []
 		
 		# Upload data log file (to update)
-		uploadFile("ADXLData/" + piID + "_log", SCPSession)
-		uploadFile("ADXLData/" + piID + "_upload_log", SCPSession)
-		log("Upload complete")	
+		uploadFile((dataFolder + piID + "_log"), SCPSession, uploadDirectory)
+		uploadFile((dataFolder + piID + "_upload_log"), SCPSession, uploadDirectory)
+		log("Upload complete")
 		SCPSession = disconnectFromSCPHost(SCPSession)
 
 	print("Slept @ " + str(datetime.now()))
