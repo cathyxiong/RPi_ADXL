@@ -15,8 +15,8 @@ from datetime import datetime
 from glob import glob
 
 # init default values
-dataFolder = "/root/RPi_ADXL_Storage/"
-piIDList = ["RPi-Lui", "RPi-Denny"]
+#dataFolder = "/root/RPi_ADXL_Storage/"
+#piIDList = ["RPi-Lui", "RPi-Denny"]
 filesAlreadyDrawn = []
 
 def getPlotterSettings(location = "plot_settings.ini"):
@@ -51,7 +51,7 @@ def getLatestFile(dataFolder, piID):
 	
 	for file in filelist:
 		# Parse filename for date
-		filename = (file.split("/"))[4]
+		filename = (file.split("/"))[5]
 		filedate = (filename.split("["))[1]
 		filedate = (filedate.split("]"))[0]
 		filedate = datetime.strptime(filedate, "%Y-%m-%d_%H-%M-%S")
@@ -88,14 +88,14 @@ def parseData(latestDataFile):
 	
 	return x, y, z, time
 
-def plotAxes(x, y, z, time, latestDataFile, piID, location = "/var/www/104.236.141.183/public_html/RPi_ADXL_Storage/"):
+def plotAxes(x, y, z, time, latestDataFile, piID, saveLocation):
 	dict = {"x": x, "y": y, "z": z}
 	
 	for axis in dict:
 		print("Plotting axis " + axis)
 		plt.plot(time, dict[axis])
 		plt.title(axis + ": " + latestDataFile)
-		plt.savefig(location + piID + "/plot_" + axis + ".png")
+		plt.savefig(saveLocation + piID + "/plot_" + axis + ".png")
 		plt.clf()
 		
 	return True
@@ -127,7 +127,7 @@ while True:
 
 				# Plot all three axes and save as png
 				print("Plotting all axes")
-				plotAxes(x, y, z, time, latestDataFile, piID)
+				plotAxes(x, y, z, time, latestDataFile, piID, saveLocation)
 				filesAlreadyDrawn.append(latestDataFile)
 			else:
 				print(latestDataFile + " has already been drawn!")
