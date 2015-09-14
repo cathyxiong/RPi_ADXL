@@ -100,8 +100,9 @@ def connectToSCPHost(remote, username):
 		SCPSession = plumbum.machines.SshMachine(remote, user=username, keyfile=sshLocation)
 		log("Connected to SCP Session")
 		return SCPSession
-	except:
+	except Exception as error:
 		log("!!! - ERROR - connectToSCPHost() - failed to connect")
+		log("	   ERROR WAS: " + str(error))
 		return -1
 	
 
@@ -115,9 +116,9 @@ def uploadFile(fileName, SCPSession, location):
 		localFile = plumbum.local.path(fileName)
 		remoteDestination = SCPSession.path(location + piID + "/")
 		plumbum.path.utils.copy(localFile, remoteDestination)
-	except Exception as e:
-		log("!!! - ERROR - uploadFile() failed to upload " + fileName)
-		print(e)
+	except Exception as error:
+		log("!!! ERROR - uploadFile()- failed to up: " + fileName)
+		log("	 ERROR WAS: " + str(error))
 	
 	addToSentHistoryList(fileName)
 	
@@ -158,6 +159,8 @@ interval = float(input("\nHow often to check and upload (in minutes): ")) * 60
 # First scan the folder for files and grab files
 while True:
 	clearScreen()
+	logList = []
+	
 	print("\n######### uploadADXL (SCP) running #########\n")
 	printUploadSettings(settings)
 	print("Uploading every " + str(interval/60) + " minutes")
@@ -174,18 +177,20 @@ while True:
 		if (uploadQueue):
 			print("\nUploading new files in queue...")
 			uploadTheQueue(uploadQueue, SCPSession, uploadDirectory)
-			
+			log("Upload complete")
 		else:
 			print("\nQueue empty!")
 
-		# Dump log to file, then clear local log
-		writeLog()
-		logList = []
 		
-		# Upload data log file (to update)
+
+		# Upload data and upload log file (to update)
 		uploadFile((dataFolder + piID + "_log"), SCPSession, uploadDirectory)
+		
+		# Dump log to file
+		writeLog()
+
+		# Upload log file online
 		uploadFile((dataFolder + piID + "_upload_log"), SCPSession, uploadDirectory)
-		log("Upload complete")
 		SCPSession = disconnectFromSCPHost(SCPSession)
 
 	print("Slept @ " + str(datetime.now()))
