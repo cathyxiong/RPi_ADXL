@@ -13,7 +13,13 @@ from collections import deque
 # DECLARE ALL VARIABLES FOR NEATNESS ####################!!!!!!!!!!!!!!!!!#################
 
 # Declare ADXL345 class from adxl345 library
-myADXL = i2c_adxl345.i2c_adxl345(1)
+try:
+	myADXL = i2c_adxl345.i2c_adxl345(1)
+	generateZeroData = False
+except:
+	myADXL = 0
+	generateZeroData = True
+	
 piID = "RPi_Unassigned"
 
 # Interval controls how often we retrieve axes (seconds)
@@ -46,8 +52,6 @@ checkForSignificance = True
 # Up/Down, North/South, East/West
 axisOrientationInfo = ["z", "x", "y"]
 
-# Ensure this is defaulted to false
-generateZeroData = False
 
 def checkListForSignificance(dataList):
 	global significanceThresholds
@@ -160,22 +164,14 @@ def getRPiSettings(settingsLocation = "RPi_settings.ini"):
 		settingsDict[type] = (settings["Main"][type] == "True")
 	
 	settingsDict["counterMax"] = (settingsDict["save_interval"]*60)/settingsDict["adxl_interval"]
-	
-	# Seperating this to keep this setting secret
-	# Meaning "generateZeroData" can be omitted from .ini
 
-	if "generateZeroData" in settings["Main"]:
-		settingsDict["generateZeroData"] = (settings["Main"]["generateZeroData"] == "True")
-	else:
-		settingsDict["generateZeroData"] = False
-	
 	return settingsDict
 
 def applyRPiSettings(settings):
 	# Translate to normal variables for readability
 	# It pains me to use these global variables
 	global piID, interval, counterMaxTime, counterMax, checkForSignificance
-	global significanceThresholds, axisOrientationInfo, generateZeroData
+	global significanceThresholds, axisOrientationInfo
 	
 	piID = settings["piID"]
 	interval = settings["adxl_interval"]
@@ -184,7 +180,6 @@ def applyRPiSettings(settings):
 	checkForSignificance = settings["checkForSignificance"]
 	significanceThresholds = [settings["x_thresh"], settings["y_thresh"], settings["z_thresh"]]
 	axisOrientationInfo = [settings["up_orient"], settings["north_orient"], settings["east_orient"]]
-	generateZeroData = settings["generateZeroData"]
 	
 def printSettings(title):
 	# This DOES NOT print whatever is in the settings dict
