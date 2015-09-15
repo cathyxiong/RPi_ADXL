@@ -28,13 +28,14 @@ logList = []
 def getRPiSettings(settingsLocation = "RPi_settings.ini"):
 	settings = ConfigParser()
 	settings.read(settingsLocation)
-	
+
 	settingsDict = {}
 	settingsDict["piID"] = settings["RPi"]["piID"]
-	settingsDict["uploadUser"] = settings["Upload"]["uploadUser"]
-	settingsDict["uploadHost"] = settings["Upload"]["uploadHost"]
-	settingsDict["uploadDirectory"] = settings["Upload"]["uploadDirectory"]
-	settingsDict["dataFolder"] = settings["Upload"]["dataFolder"]
+	
+	settingsToGrabStrings = ["uploadUser", "uploadHost", "uploadDirectory", "dataFolder"]
+	
+	for type in settingsToGrabStrings:
+		settingsDict[type] = settings["Upload"][type]
 	
 	return settingsDict
 
@@ -64,11 +65,10 @@ def writeLog():
 	for line in logList:
 		logFile.write(line + "\n")
 		
-	logFile.write("\n======= SCPuploadADXL.py reinitiated =======")
+	logFile.write("## uploadADXL.py reinitiated @ " + str(datetime.now()) + " ##\n")
 	
 	logFile.close()
 	return True
-
 
 def scanFolder(dataFolder):
 	uploadQueue = deque()
@@ -157,7 +157,7 @@ input("Press [ENTER] to continue . . .")
 
 # Ask how often we should try to upload
 interval = float(input("\nHow often to check and upload (in minutes): ")) * 60
-		
+	
 # First scan the folder for files and grab files
 while True:
 	clearScreen()

@@ -10,9 +10,9 @@ import random
 from configparser import ConfigParser
 from collections import deque
 
-# DECLARE ALL VARIABLES FOR NEATNESS ####################!!!!!!!!!!!!!!!!!#################
-
 # Declare ADXL345 class from adxl345 library
+# generateZeroData is a debug tool to keep the script running if
+# the ADXL does initialize due to some error
 try:
 	myADXL = i2c_adxl345.i2c_adxl345(1)
 	generateZeroData = False
@@ -52,9 +52,10 @@ checkForSignificance = True
 # Up/Down, North/South, East/West
 axisOrientationInfo = ["z", "x", "y"]
 
+# Folder to store files
+dataFolder = "POOP/"
 
 def checkListForSignificance(dataList):
-	global significanceThresholds
 	x_threshold = significanceThresholds[0]
 	y_threshold = significanceThresholds[1]
 	z_threshold = significanceThresholds[2]
@@ -124,17 +125,6 @@ def getXYZtFromPacket(packet):
 	time = packet[3]
 	return (x, y, z, time)
 
-def generateDataID():
-	ID = ""
-	randomNumber = 0
-	digits = 16
-
-	# Generate 5 separate numbers and attach
-	for n in range (0, digits):
-		randomNumber = random.randint(0,9)
-		ID += str(randomNumber)
-	return ID
-
 def getData():
 	(x, y, z) = myADXL.getAxes()
 	time = str(datetime.now())
@@ -164,14 +154,15 @@ def getRPiSettings(settingsLocation = "RPi_settings.ini"):
 		settingsDict[type] = (settings["Main"][type] == "True")
 	
 	settingsDict["counterMax"] = (settingsDict["save_interval"]*60)/settingsDict["adxl_interval"]
-
+	settingsDict["dataFolder"] = settings["Upload"]["dataFolder"]
+	
 	return settingsDict
 
 def applyRPiSettings(settings):
 	# Translate to normal variables for readability
 	# It pains me to use these global variables
 	global piID, interval, counterMaxTime, counterMax, checkForSignificance
-	global significanceThresholds, axisOrientationInfo
+	global significanceThresholds, axisOrientationInfo, dataFolder
 	
 	piID = settings["piID"]
 	interval = settings["adxl_interval"]
@@ -180,6 +171,7 @@ def applyRPiSettings(settings):
 	checkForSignificance = settings["checkForSignificance"]
 	significanceThresholds = [settings["x_thresh"], settings["y_thresh"], settings["z_thresh"]]
 	axisOrientationInfo = [settings["up_orient"], settings["north_orient"], settings["east_orient"]]
+	dataFolder = settings["dataFolder"]
 	
 def printSettings(title):
 	# This DOES NOT print whatever is in the settings dict
@@ -192,24 +184,30 @@ def printSettings(title):
 	print ("Counts per file: " + str(counterMax) + " - approx: " + str(counterMaxTime) + " minutes")
 	print ("Checking for Significance - " + str(checkForSignificance))
 	print ("Significance Thresholds - " + str(significanceThresholds))
+	print ("Saving to - " + dataFolder)
 	print ("Axis Orientation (UP/DOWN, NORTH/SOUTH, EAST/WEST): " + str(axisOrientationInfo))
 
 	# Print a warning if we're generating zero data
 	if generateZeroData:
+		print("\n!! - WARNING - FAILED TO INITIALIZE ADXL CLASS")
 		print("!! - WARNING - NOT GENERATING ACTUAL ADXL DATA !!!")
 	
 def strConvertAxes (x,y,z):
 	return (str(x),str(y),str(z))
-	
-def writeToDisk(dataList, settings):
-	global counter, counterError
-	global axisOrientationInfo	
 
+def logScriptStart():
+	# This function stores an extra line to log whenever mainADXL is reinitiated
+	fileName = dataFolder + piID + "_log"
+	logFile = open(fileName, 'a')		
+	logFile.write("## mainADXL.py reinitiated @ " + str(datetime.now()) + " ##\n")
+	logFile.close()
+	
+def writeToDisk(dataList):
 	# Append date to filename
 	fileDate = datetime.now().strftime("[%Y-%m-%d_%H-%M-%S]")
 	
 	# Open log file
-	logDataFile = open('ADXLData/' + piID + '_log', 'a')
+	logDataFile = open(dataFolder + piID + '_log', 'a')
 	
 	# If prompted to check and list has NO significant values, record that no data was significant
 	if checkForSignificance and (checkListForSignificance(dataList) == False):
@@ -222,7 +220,7 @@ def writeToDisk(dataList, settings):
 		return
 	
 	# Open data file
-	mainDataFile = open('ADXLData/'+ piID + '_data_' + fileDate, 'w')
+	mainDataFile = open(dataFolder + piID + '_data_' + fileDate, 'w')
 	
 	# Generate header string
 	headerString = ('Pi_ID: ' + piID
@@ -301,6 +299,9 @@ settings = userInputDialog(settings)
 clearScreen()
 #######
 
+# Log when script is initiated again
+logScriptStart()
+
 ####### INITIATE MAIN PROGRAM LOOP
 # Do not clear screen here - leave a summary log per file written
 printSettings("RPi_ADXL RUNNING")
@@ -318,7 +319,7 @@ while True:
 		counter += 1
 		
 		if counter > counterMax:
-			writeToDisk(dataList, settings)
+			writeToDisk(dataList)
 			dataList = []
 			counter = 0
 			counterError = 0
