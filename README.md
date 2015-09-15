@@ -6,7 +6,7 @@ Work in progress
 # 1.0 Installation
 Installing the RPi_ADXL source must be done AFTER the Raspberry Pi has been loaded with Raspbian and its appropriate settings configured. Please follow the documentation to properly setup a Raspberry Pi for use with RPi_ADXL
 
-## 1.1 Raspberry Pi Setup
+### 1.1 Raspberry Pi Setup
 The Raspberry Pi used and tested in development was the Raspberry Pi 2, specifically the 2B+ model.
 
 The operating system used was the latest Rasbian build available on the raspberrypi.org website. The steps taken to install the OS are also on the website: https://www.raspberrypi.org/help/noobs-setup/. You may also purchase a Raspberry Pi with an SD Card that has NOOBS preinstalled on it.
@@ -20,7 +20,7 @@ This properly configures the i2c modules to run, and should allow our RPi to com
 
 Then run `sudo apt-get upgrade` to ensure your OS is up-to-date.
 
-## 1.2 Security Setup
+### 1.2 Security Setup
 This is a very important section. The Raspberry Pi's default user and password is "pi" and "raspberry" respectively. If your Raspberry Pi is open to the internet (if you've forwarded its ports through the router), then anyone scanning can hijack your Pi and do whatever they please.
 
 To avoid this, we must immediately take the following steps before opening it to the internet. Otherwise, if you're keeping the RPi_ADXL modules inside a LAN network (or simply uploading data to the internet, but not opening any ports for ssh connection to your RPis) then you can probably skip all the steps under this security section.
@@ -110,7 +110,7 @@ RPi_ADXL uses THREE other modules in order to work (that is not included in the 
 
 This completes the Raspberry Pi setup.
 
-##2.1 Installing the RPi_ADXL source
+###2.1 Installing the RPi_ADXL source
 The RPi_ADXL program can be installed anywhere, as its target folders can work independently of where it's located.
 
 To be safe, we'll put it in the same directory used during dev/test. This is in `/home/pi/mainproject/`.
@@ -121,7 +121,7 @@ Once inside the directory `/home/pi/mainproject/` we will then use git to clone 
 
 To clone RPi_ADXL, simply run `git clone https://github.com/theSpeare/RPi_ADXL.git`. This will then grab the source online and put it into a folder named RPi_ADXL inside `/home/pi/mainproject/`. Congratulations - RPi_ADXL is now installed. Only one more thing to do to complete our setup.
 
-##2.2 Setup our RPi_settings.ini file
+###2.2 Setup our RPi_settings.ini file
 As of the time this readme was written, the RPi_settings.ini file is stored on the repo as "TEMPLATE-RPi_settings.ini". To enable our settings, copy and paste this file as "RPi_settings.ini". **It is important you do not simply delete or rename the TEMPLATE file, due to git tracking issues.**
 
 To copy and paste the file as RPi_settings.ini: make sure you are in the folder containing the source, for example: `/home/pi/mainproject/RPi_ADXL/` then run `cp TEMPLATE-RPi_settings.ini RPi_settings.ini`. Verify the results by typing `-ls` and checking that there is now a separate RPi_settings.ini file.
@@ -135,11 +135,11 @@ To edit the .ini file, run `sudo nano RPi_settings.ini`. Change the entry under 
 Congratulations! You have completed setting up your Raspberry Pi for RPi_ADXL use.
 
 #3.0 Configuring the RPi_ADXL
-##3.1 RPi_settings.ini
+###3.1 RPi_settings.ini
 
-##3.2 Remote Server Configuration
+###3.2 Remote Server Configuration
 
 #4.0 Running the RPi_ADXL
-##4.1 Running the Main RPi_ADXL Scripts
-##4.2 Running the Scripts with Screen
-##4.3 Killing the Scripts
+###4.1 Running the Main RPi_ADXL Scripts
+###4.2 Running the Scripts with Screen
+###4.3 Killing the Scripts
