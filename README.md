@@ -5,8 +5,7 @@ Work in progress
 
 # 1.0 Installation
 Installing the RPi_ADXL source must be done AFTER the Raspberry Pi has been loaded with Raspbian and its appropriate settings configured. Please follow the documentation to properly setup a Raspberry Pi for use with RPi_ADXL
-
-
+<br><br><br>
 
 ### 1.1 Raspberry Pi Setup
 The Raspberry Pi used and tested in development was the Raspberry Pi 2, specifically the 2B+ model.
@@ -21,8 +20,7 @@ Then run `sudo nano /etc/modules` and add `i2c-bcm2708 and i2c-dev` lines as so:
 This properly configures the i2c modules to run, and should allow our RPi to communicate with the ADXL.
 
 Then run `sudo apt-get upgrade` to ensure your OS is up-to-date.
-
-
+<br><br><br>
 
 ### 1.2 Security Setup
 This is a very important section. The Raspberry Pi's default user and password is "pi" and "raspberry" respectively. If your Raspberry Pi is open to the internet (if you've forwarded its ports through the router), then anyone scanning can hijack your Pi and do whatever they please.
@@ -33,12 +31,12 @@ To avoid this, we must immediately take the following steps before opening it to
 2. Remove root login (via ssh)
 3. Install fail2ban
 4. Optional: remove user "pi" password altogether and use ssh keys
-
+<br><br><br>
 
 
 #### 1.2.1 - Change user "pi" password
 In the console, run `passwd`. This will ask you for a new password. Simply input a new password, and it's done. Note that this will only change the password for the user "pi", or whichever user you're currently on. Please try to make this long and secure if you intend on opening the Pi to the internet.
-
+<br><br><br>
 
 
 #### 1.2.2 - Remove root login (vis ssh)
@@ -47,14 +45,14 @@ The root user's password is by default also raspberry. However, if we're only wo
 To remove ssh remote root login, run `sudo nano /etc/ssh/sshd_config`
 ![permitRootLoginimage](http://i.imgur.com/70DNP2E.png)
 Locate the entry `PermitRootLogin` and change the `yes` to `no`, or comment it out. Done.
-
+<br><br><br>
 
 
 #### 1.2.3 - Install fail2ban
 We can prevent attempts to bruteforce our password (or at least make it harder) by installing fail2ban. fail2ban by default runs as a service and bans any access to the RPi for 10 minutes if an incorrect password has been entered three times. This is configurable. A configuration tutorial is available here: https://www.digitalocean.com/community/tutorials/how-to-protect-ssh-with-fail2ban-on-ubuntu-14-04 under the section "Configure Fail2Ban with your Service Settings". For now we're okay to use the default settings.
 
 Install fail2ban by running `sudo apt-get install fail2ban`. Done.
-
+<br><br><br>
 
 
 #### 1.2.4 - Optional: ssh password login altogether and only use ssh keys
@@ -75,14 +73,14 @@ Typing `ls /pi/home/.ssh/` should now show two new files: `id_rsa` and `id_rsa.p
 Append this to the authorized_key file in the .ssh/ folder by running `/pi/home/.ssh/id_rsa.pub >> /pi/home/.ssh/authorized_keys`. Now your RPi is using this public key to compare with any private keys that attempts to ssh authenticate with it. **It is vital that you have a way of copying this id_rsa file, perhaps through FireZilla.**
 
 **This is why I will not write about how to disable ssh password login, but rather recommend that you change your pi login password to something medium and secure.**
-
+<br><br><br>
 
 
 ##1.3 Network Setup
 If for whatever reason you decide you do not want to use the RPi in a wireless configuration, skip this section as RPis connect to networks via Ethernet by themselves.
 
 Otherwise, continue on below to configure your Pi for wireless access.
-
+<br><br><br>
 
 
 ####1.3.1 Configuring WiFi
@@ -90,7 +88,7 @@ As the Raspberry Pi website already have great documentation on how to setup WiF
 
 Configuring via GUI: https://www.raspberrypi.org/documentation/configuration/wireless/
 Configuring via Command Line: https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cli.md
-
+<br><br><br>
 
 
 ####1.3.2 Hostname
@@ -99,7 +97,7 @@ You may give your RPi an alias, such as RPi-Lui, for ease of identification in t
 Type `sudo raspi-config`. Under "8 Advanced Options" > "A2 Hostname", you may input the hostname of your Pi.
 
 This completes the Raspberry Pi setup. Any step after this can be completed via SSH remote login, or can be carried on while still on the RPi locally.
-
+<br><br><br>
 
 
 #2.0 Installing RPi_ADXL Dependencies
@@ -126,7 +124,7 @@ RPi_ADXL uses THREE other modules in order to work (that is not included in the 
 
 
 
-
+<br><br><br>
 
 ###2.1 Installing the RPi_ADXL source
 The RPi_ADXL program can be installed anywhere, as its target folders can work independently of where it's located.
@@ -141,7 +139,7 @@ To clone RPi_ADXL, simply run `git clone https://github.com/theSpeare/RPi_ADXL.g
 
 
 
-
+<br><br><br>
 ###2.2 Setup our RPi_settings.ini file
 As of the time this readme was written, the RPi_settings.ini file is stored on the repo as "TEMPLATE-RPi_settings.ini". To enable our settings, copy and paste this file as "RPi_settings.ini". **It is important you do not simply delete or rename the TEMPLATE file, due to git tracking issues.**
 
@@ -156,7 +154,7 @@ To edit the .ini file, run `sudo nano RPi_settings.ini`. Change the entry under 
 Congratulations! You have completed setting up your Raspberry Pi for RPi_ADXL use.
 
 
-
+<br><br><br>
 #3.0 Configuring the RPi_ADXL
 ###3.1 RPi_settings.ini
 
