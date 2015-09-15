@@ -3,8 +3,7 @@
 # Closes screens currently running
 # Probably won't interrupt scripts ongoing though
 
-killall screen
-killall python3
+sh stopADXL.sh
 
 screen -dmS main
 screen -dmS upload

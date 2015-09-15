@@ -1,3 +1,3 @@
 #!/bin/bash
-killall screen
-killall python3
+sudo killall screen
+sudo killall python3
