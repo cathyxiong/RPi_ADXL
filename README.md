@@ -126,4 +126,8 @@ As of the time this readme was written, the RPi_settings.ini file is stored on t
 
 To copy and paste the file as RPi_settings.ini: make sure you are in the folder containing the source, for example: `/home/pi/mainproject/RPi_ADXL/` then run `cp TEMPLATE-RPi_settings.ini RPi_settings.ini`. Verify the results by typing `-ls` and checking that there is now a separate RPi_settings.ini file.
 
-The 
+*VERY IMPORTANT* The RPi_ADXL identifies itself uniquely against others with an ID inside the RPi_settings.ini file. Make sure you change the ID to something unique that no other RPi_ADXL is using.
+
+To edit the .ini file, run `sudo nano RPi_settings.ini`. Change the entry under `piID=RPi-Lui` to `piID=RPi-<insertwhatevernameyouwanthere>`.
+
+![piIDimage](http://i.imgur.com/caDGMXv.png)
