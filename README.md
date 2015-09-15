@@ -15,6 +15,7 @@ Once Rasbian has been installed, run "sudo raspi-config" (if it hasn't already c
 
 Then run "sudo nano /etc/modules" and add lines as so:
 ![modulesimage](https://learn.adafruit.com/system/assets/assets/000/003/054/medium800/learn_raspberry_pi_editing_modules_file.png?1396790682)
+
 (courtesy to adafruit.com for image)
 
 
