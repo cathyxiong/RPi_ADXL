@@ -1,7 +1,4 @@
 #!/bin/bash
-# Runs both main scripts in separate screens
-# Closes screens currently running
-# Probably won't interrupt scripts ongoing though
 
 sh stopADXL.sh
 
