@@ -14,7 +14,7 @@ __2.2 [Setup RPi_settings.ini file](https://github.com/theSpeare/RPi_ADXL#22-set
 3.0 [Configuring the RPi_ADXL](https://github.com/theSpeare/RPi_ADXL#30-configuring-the-rpi_adxl)<br>
 __3.1 [RPi_settings.ini](https://github.com/theSpeare/RPi_ADXL#31-rpi_settingsini)<br>
 __3.2 [Private ssh key for connecting and uploading to remote server](https://github.com/theSpeare/RPi_ADXL#32-private-ssh-key-for-connecting-and-uploading-to-remote-server)<br>
--3.3 [Remote Server Configuration](https://github.com/theSpeare/RPi_ADXL#33-remote-server-configuration)<br>
+__3.3 [Remote Server Configuration](https://github.com/theSpeare/RPi_ADXL#33-remote-server-configuration)<br>
 <br><br>
 4.0 [Running RPi_ADXL](https://github.com/theSpeare/RPi_ADXL#40-running-the-rpi_adxl)<br>
 __4.1 [Running the Main RPi_ADXL Scripts](https://github.com/theSpeare/RPi_ADXL#41-running-the-main-rpi_adxl-scripts)<br>
