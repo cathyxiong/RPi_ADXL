@@ -8,8 +8,8 @@ RPi_ADXL
 1.3 [Network Setup](https://github.com/theSpeare/RPi_ADXL#13-network-setup)<br>
 <br><br>
 2.0 [Installing RPi_ADXL Dependencies](https://github.com/theSpeare/RPi_ADXL#20-installing-rpi_adxl-dependencies)<br>
-* 2.1 [Installing the RPi_ADXL Source](https://github.com/theSpeare/RPi_ADXL#21-installing-the-rpi_adxl-source)<br>
-* 2.2 [Setup RPi_settings.ini file](https://github.com/theSpeare/RPi_ADXL#22-setup-our-rpi_settingsini-file)<br>
+2.1 [Installing the RPi_ADXL Source](https://github.com/theSpeare/RPi_ADXL#21-installing-the-rpi_adxl-source)<br>
+2.2 [Setup RPi_settings.ini file](https://github.com/theSpeare/RPi_ADXL#22-setup-our-rpi_settingsini-file)<br>
 <br><br>
 3.0 [Configuring the RPi_ADXL](https://github.com/theSpeare/RPi_ADXL#30-configuring-the-rpi_adxl)<br>
 3.1 [RPi_settings.ini](https://github.com/theSpeare/RPi_ADXL#31-rpi_settingsini)<br>
