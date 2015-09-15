@@ -347,6 +347,5 @@ while True:
 		
 	except IOError:
 		counterError += 1
-		
 	
-sleep(interval)
+	sleep(interval)
