@@ -2,23 +2,23 @@ RPi_ADXL
 =====================
 
 # Table of Contents
-1.0 [Installation](https://github.com/theSpeare/RPi_ADXL#10-installation)
-    1.1 [Raspberry Pi Setup](https://github.com/theSpeare/RPi_ADXL#11-raspberry-pi-setup)
-    1.2 [Security Setup](https://github.com/theSpeare/RPi_ADXL#12-security-setup)
-    1.3 [Network Setup](https://github.com/theSpeare/RPi_ADXL#13-network-setup)
-<br>
-2.0 [Installing RPi_ADXL Dependencies](https://github.com/theSpeare/RPi_ADXL#20-installing-rpi_adxl-dependencies)
-    2.1 [Installing the RPi_ADXL Source](https://github.com/theSpeare/RPi_ADXL#21-installing-the-rpi_adxl-source)
-    2.2 [Setup RPi_settings.ini file](https://github.com/theSpeare/RPi_ADXL#22-setup-our-rpi_settingsini-file)
-<br>
-3.0 [Configuring the RPi_ADXL](https://github.com/theSpeare/RPi_ADXL#30-configuring-the-rpi_adxl)
-    3.1 [RPi_settings.ini](https://github.com/theSpeare/RPi_ADXL#31-rpi_settingsini)
-    3.2 [Private ssh key for connecting and uploading to remote server](https://github.com/theSpeare/RPi_ADXL#32-private-ssh-key-for-connecting-and-uploading-to-remote-server)
-    3.3 [Remote Server Configuration](https://github.com/theSpeare/RPi_ADXL#33-remote-server-configuration)
-<br>
-4.0 [Running RPi_ADXL](https://github.com/theSpeare/RPi_ADXL#40-running-the-rpi_adxl)
-    4.1 [Running the Main RPi_ADXL Scripts](https://github.com/theSpeare/RPi_ADXL#41-running-the-main-rpi_adxl-scripts)
-    4.2 [Running the Scripts with Screen](https://github.com/theSpeare/RPi_ADXL#42-running-the-scripts-with-screen)
+1.0 [Installation](https://github.com/theSpeare/RPi_ADXL#10-installation)<br>
+    1.1 [Raspberry Pi Setup](https://github.com/theSpeare/RPi_ADXL#11-raspberry-pi-setup)<br>
+    1.2 [Security Setup](https://github.com/theSpeare/RPi_ADXL#12-security-setup)<br>
+    1.3 [Network Setup](https://github.com/theSpeare/RPi_ADXL#13-network-setup)<br>
+<br><br>
+2.0 [Installing RPi_ADXL Dependencies](https://github.com/theSpeare/RPi_ADXL#20-installing-rpi_adxl-dependencies)<br>
+    2.1 [Installing the RPi_ADXL Source](https://github.com/theSpeare/RPi_ADXL#21-installing-the-rpi_adxl-source)<br>
+    2.2 [Setup RPi_settings.ini file](https://github.com/theSpeare/RPi_ADXL#22-setup-our-rpi_settingsini-file)<br>
+<br><br>
+3.0 [Configuring the RPi_ADXL](https://github.com/theSpeare/RPi_ADXL#30-configuring-the-rpi_adxl)<br>
+    3.1 [RPi_settings.ini](https://github.com/theSpeare/RPi_ADXL#31-rpi_settingsini)<br>
+    3.2 [Private ssh key for connecting and uploading to remote<br> server](https://github.com/theSpeare/RPi_ADXL#32-private-ssh-key-for-connecting-and-uploading-to-remote-server)
+    3.3 [Remote Server Configuration](https://github.com/theSpeare/RPi_ADXL#33-remote-server-configuration)<br>
+<br><br>
+4.0 [Running RPi_ADXL](https://github.com/theSpeare/RPi_ADXL#40-running-the-rpi_adxl)<br>
+    4.1 [Running the Main RPi_ADXL Scripts](https://github.com/theSpeare/RPi_ADXL#41-running-the-main-rpi_adxl-scripts)<br>
+    4.2 [Running the Scripts with Screen](https://github.com/theSpeare/RPi_ADXL#42-running-the-scripts-with-screen)<br>
 
 # 1.0 Installation
 Installing the RPi_ADXL source must be done AFTER the Raspberry Pi has been loaded with Raspbian and its appropriate settings configured. Please follow the documentation to properly setup a Raspberry Pi for use with RPi_ADXL
