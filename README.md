@@ -85,19 +85,28 @@ This completes the Raspberry Pi setup. Any step after this can be completed via 
 
 
 # 2.0 Installing RPi_ADXL Dependencies
-RPi_ADXL uses two other modules in order to work (that is not included in the source), which is used for its ability to upload files via SCP to a remote server by Python3.
+RPi_ADXL uses THREE other modules in order to work (that is not included in the source), which is used for its ability to upload files via SCP to a remote server by Python3.
 
-One of the modules is called `plumbum` and is only available via another package-installer `pip`. Therefore you must install it in these steps (to also ensure that you are downloading the Python3 version of plumbum):
+- plumbum
+- git
+- screen
+
+#####A: One of the modules is called `plumbum` and is only available via another package-installer `pip`. Therefore you must install it in these steps (to also ensure that you are downloading the Python3 version of plumbum):
 
 1. Install pip3.2 by running `sudo apt-get install python3-pip`
 2. Install plumbum by running `sudo pip-3.2 install plumbum`
 
 
-The second module is `git` which we use to push/pull updates to our master repository online on GitHub. Install like so:
+#####B: The second module is `git` which we use to push/pull updates to our master repository online on GitHub. Install like so:
 
 1. Run `sudo apt-get install git`
 
-Done. For future reference, the RPi_ADXL website is located here: https://github.com/theSpeare/RPi_ADXL
+
+#####C: The third module is 'screen' which is used to keep sessions persistent even after logging out of our ssh session
+
+1. Run `sudo apt-get install screen`
+
+
 
 This completes the Raspberry Pi setup.
 
@@ -117,4 +126,4 @@ As of the time this readme was written, the RPi_settings.ini file is stored on t
 
 To copy and paste the file as RPi_settings.ini: make sure you are in the folder containing the source, for example: `/home/pi/mainproject/RPi_ADXL/` then run `cp TEMPLATE-RPi_settings.ini RPi_settings.ini`. Verify the results by typing `-ls` and checking that there is now a separate RPi_settings.ini file.
 
-
+The 
