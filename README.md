@@ -27,10 +27,34 @@ To avoid this, we must immediately take the following steps before opening it to
 
 1. Change user "pi" password
 2. Remove root login (via ssh)
-2. Install fail2ban
-3. Optional: remove user "pi" password altogether and use ssh keys
+3. Install fail2ban
+4. Optional: remove user "pi" password altogether and use ssh keys
 
 ### Step 1 - Change user "pi" password
+In the console, run `passwd`. This will ask you for a new password. Simply input a new password, and it's done. Note that this will only change the password for the user "pi", or whichever user you're currently on.
 
+### Step 2 - Remove root login (vis ssh)
+The root user's password is by default also raspberry. However, if we're only worried about remote intrusions, we can leave this as the default password and just disable remote login to the user root. This way if something goes wrong we can always plug our keyboard into our raspberry pi and access root without forgetting some other complicated password.
+
+To remove ssh remote root login, run `sudo nano /etc/ssh/sshd_config`
+![permitRootLoginimage](http://i.imgur.com/70DNP2E.png)
+Locate the entry `PermitRootLogin` and change the `yes` to `no`, or comment it out. Done.
+
+### Step 3 - Install fail2ban
+We can prevent attempts to bruteforce our password (or at least make it harder) by installing fail2ban. fail2ban by default runs as a service and bans any access to the RPi for 10 minutes if an incorrect password has been entered three times. This is configurable. A configuration tutorial is available here: https://www.digitalocean.com/community/tutorials/how-to-protect-ssh-with-fail2ban-on-ubuntu-14-04 under the section "Configure Fail2Ban with your Service Settings". For now we're okay to use the default settings.
+
+Install fail2ban by running `sudo apt-get install fail2ban`. Done.
+
+### Step 4 - Optional: ssh password login altogether and use ssh keys
+Note that this step can be dangerous if you do not know what you are doing.
+
+ssh keys work a key pair authentication method. The server has a "public key", and its pair "private key" is what is stored on your local computer. For example, your Raspberry Pi will have a "public key" on it. To connect to your Raspberry Pi from your computer, you must have the "private key" that matches the "public key" on the Pi.
+
+Note that ssh-keys have already been generated for the development and testing of this project, so ask the developer for instructions on where to find the pre-existing public/private keys.
+
+There are multiple ways to generate ssh-key pairs. For this example we'll do it on the Raspberry Pi.
+
+Run `ssh-keygen -t rsa -C "RPi_ADXL"`. Give it a name like "test" and then `ENTER` to continue. You may choose to leave the passphrase as empty (a passphrase adds a password to the private key, adding another authentication step).
+![ssh-keygenimage](http://i.imgur.com/mRWDHTo.png)
 
 
