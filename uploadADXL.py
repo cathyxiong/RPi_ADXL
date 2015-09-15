@@ -18,12 +18,20 @@ import plumbum
 
 # DECLARE ALL VARIABLES FOR NEATNESS ####################!!!!!!!!!!!!!!!!!#################
 
-# declare uploadQueue
+# Declare uploadQueue
 uploadQueue = deque()
 
-# declare lists for files sent before & log for filewriting
+# Declare lists for files sent before & log for filewriting
 dataSentHistoryList = []
 logList = []
+
+# Declare variables for neatness
+piID = ""
+dataFolder = ""
+uploadUser = ""
+uploadHost = ""
+uploadDirectory = ""
+uploadInterval = 5
 	
 def getRPiSettings(settingsLocation = "RPi_settings.ini"):
 	settings = ConfigParser()
@@ -33,21 +41,44 @@ def getRPiSettings(settingsLocation = "RPi_settings.ini"):
 	settingsDict["piID"] = settings["RPi"]["piID"]
 	
 	settingsToGrabStrings = ["uploadUser", "uploadHost", "uploadDirectory", "dataFolder"]
+	settingsToGrabNumbers = ["uploadInterval"]
 	
 	for type in settingsToGrabStrings:
 		settingsDict[type] = settings["Upload"][type]
 	
+	for type in settingsToGrabNumbers:
+		settingsDict[type] = float(settings["Upload"][type])
+	
 	return settingsDict
 
+def applyRPiSettings(settings):
+	global piID, dataFolder
+	global uploadUser, uploadHost, uploadDirectory
+	global uploadInterval
+	
+	piID = settings["piID"]
+	dataFolder = settings["dataFolder"]
+	uploadUser = settings["uploadUser"]
+	uploadHost = settings["uploadHost"]
+	uploadDirectory = settings["uploadDirectory"]	
+	uploadInterval = settings["uploadInterval"]*60
 
 def printUploadSettings(settings):
 	print("[UPLOADADXL SETTINGS]")
-	print("piID: " + settings["piID"])
-	print("Uploading to: " + settings["uploadUser"] + "@" + settings["uploadHost"])
-	print("Remote data folder: " + settings["uploadDirectory"])
-	print("Local data folder: " + settings["dataFolder"])
+	print("piID: " + piID)
+	print("Uploading to: " + uploadUser + "@" + uploadHost)
+	print("Uploading every (default): " + str(uploadInterval/60))
+	print("Remote data folder: " + uploadDirectory)
+	print("Local data folder: " + dataFolder)
 	print("\n")
-		
+
+def checkUserAnswer(input):
+	yes = ["yes", "ye", "y", "1", "ok"]
+	
+	if (input.lower() in yes):
+		return True
+	else:
+		return False	
 
 def log(description, save = True, printScreen = True):
 	if (save):
@@ -134,7 +165,7 @@ def uploadTheQueue(uploadQueue, SCPSession, uploadDirectory):
 
 		
 def clearScreen():
-	os.system('clear')		
+	os.system('clear')
 
 	
 ######################################################################################################	 
@@ -145,18 +176,13 @@ clearScreen()
 settings = getRPiSettings()
 
 # Assign settings to variables
-piID = settings["piID"]
-dataFolder = settings["dataFolder"]
-uploadUser = settings["uploadUser"]
-uploadHost = settings["uploadHost"]
-uploadDirectory = settings["uploadDirectory"]
+applyRPiSettings(settings)
 
 # Print out settings
 printUploadSettings(settings)
-input("Press [ENTER] to continue . . .")
-
-# Ask how often we should try to upload
-interval = float(input("\nHow often to check and upload (in minutes): ")) * 60
+qString = "Use this upload interval? [" + str(uploadInterval/60) + " minutes] (y\\n) "
+if checkUserAnswer(input(qString)) == False:
+	uploadInterval = float(input("\nHow often to check and upload (in minutes): ")) * 60
 	
 # First scan the folder for files and grab files
 while True:
@@ -165,7 +191,7 @@ while True:
 	
 	print("\n######### uploadADXL (SCP) running #########\n")
 	printUploadSettings(settings)
-	print("Uploading every " + str(interval/60) + " minutes")
+	print("Uploading every " + str(uploadInterval/60) + " minutes")
 	
 	# Scan folder for new files to send out
 	print("Scanning folder and populating upload queue...")
@@ -183,8 +209,6 @@ while True:
 		else:
 			print("\nQueue empty!")
 
-		
-
 		# Upload data and upload log file (to update)
 		uploadFile((dataFolder + piID + "_log"), SCPSession, uploadDirectory)
 		
@@ -198,6 +222,6 @@ while True:
 	print("Slept @ " + str(datetime.now()))
 	print("\n\nSleeping until next upload interval...")
 	
-	sleep(interval)
+	sleep(uploadInterval)
 
 
