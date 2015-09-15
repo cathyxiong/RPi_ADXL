@@ -158,9 +158,110 @@ Congratulations! You have completed setting up your Raspberry Pi for RPi_ADXL us
 #3.0 Configuring the RPi_ADXL
 ###3.1 RPi_settings.ini
 
-###3.2 Remote Server Configuration
+RPi_settings.ini contains all of the configurable settings that runs with either mainADXL.py or uploadADXL.py. See below for example:
 
+RPi_settings.ini:
+````
+[RPi]
+piID=RPi-Lui
+
+[Main]
+# save_interval is in minutes
+adxl_interval = 0.01
+save_interval = 1
+checkForSignificance = True
+x_thresh = 0.4
+y_thresh = 0.4
+z_thresh = 0.4
+up_orient = z
+east_orient = x
+north_orient = y
+
+[Upload]
+# uploadInterval is in minutes
+uploadUser=upload
+uploadHost=104.236.141.183
+uploadDirectory=/home/upload/RPi_ADXL_Storage/
+uploadInterval = 1
+dataFolder=ADXLData/
+````
+
+- **piID** - The unique ID manually given to the RPi
+- **adxl_interval** - The ADXL getAxes() frequency in seconds. For example, a value of 0.01 will attempt to grab axes values per 0.01 seconds.
+- **save_interval** - How long mainADXL.py will collect data for before writing a file in the local data folder.
+- **checkForSignificance** - If True, mainADXL.py will ONLY write files that have gone over the given threshold values.
+- **_thresh** - In g's, these values are the thresholds `checkForSignificance` will look for to see if anything significant has been recorded. Anything below these thresholds will be ignored if checkForSignificance = True.
+- **_orient** - Input here what orientation the ADXLs are placed - this is for reference only, and will be printed to the file.
+- **uploadUser** - The user used to upload files in the remote server
+- **uploadHost** - Remote server IP
+- **uploadDirectory** - The remote directory uploadADXL.py will attempt to upload files to.
+- **uploadInterval** - How often uploadADXL will loop to check for any new files to upload.
+- **dataFolder** - The local data folder (default "ADXLData/") used to store data & log files.
+
+<br><br><br>
+###3.2 Private ssh key for connecting and uploading to remote server
+uploadADXL.py uploads to remote server by ssh key authentication. On dev/testing we use the user `upload@104.236.141.183` on a virtual linux server hosted in San Fransisco. The ssh keys have already been generated during dev/testing, so please ask the developer for the private key if you are adding new RPi_ADXLs (or simply want to ssh into the server).
+
+**The SSH private key must be placed in /home/pi/.ssh/** as the key location & name were made non-configurable outside of the script intentionally
+
+**Without the proper SSH private key, your upload will fail to authenticate and the server will refuse you connection, effectively failing uploadADXL.py**
+
+<br><br><br>
+###3.3 Remote Server Configuration
+For dev/testing, the user "upload" was created on the remote server for uploading data/log files. The configuration on the remote server is incredibly easy. First, ensure the server running has the correct public ssh key that's paired with the RPi_ADXLs that are uploading. The same steps can be used above, or you can look up plenty of tutorials on how to set this up.
+
+Next, each RPi_ADXL requires a folder of its own on the remote server. This is where it will upload its files to. Make sure when you create these folders that you are creating these folders under the user "upload", and not "root", otherwise you will have user permission issues.
+
+The default remote server location for data file storage is /home/upload/RPi_ADXL_Storage/
+This directory is of course configurable in the RPi_settings.ini. Therefore if you wish to put your RPi_ADXL_Storage folder elsewhere in your server, simply make sure that the `uploadDirectory` setting in the RPi_settings.ini is changed to reflect this. Again, you must be careful to have all folders created by the user `upload` to avoid permission issues.
+
+There should be one folder per RPi_ADXL in the RPi_ADXL_Storage directory. For example, with four RPi's: RPi-Denny, RPi-Lui, RPi-Quincy, RPi-Wing, there will be four folders.
+
+/home/upload/RPi_ADXL_Storage/RPi-Lui/
+/home/upload/RPi_ADXL_Storage/RPi-Denny/
+/home/upload/RPi_ADXL_Storage/RPi-Quincy/
+/home/upload/RPi_ADXL_Storage/RPi-Wing/
+
+Every time you add new RPis to the system you must add new folders here to give them somewhere to upload to.
+
+**Note that `uploadDirectory` in RPi_settings.ini should only point to `/home/upload/RPi_ADXL_Storage/` as uploadADXL.py will find the correct unique folder by itself with its piID**
+
+<br><br><br>
 #4.0 Running the RPi_ADXL
+RPi_ADXL is run by two main scripts: `mainADXL.py` and `uploadADXL.py`. These are run with `python3`. Other scripts included in the script are used for testing/debugging purposes.
+
+**Note in LINUX: Press CTRL+C to interrupt a script and terminate it.**
+
+<br><br><br>
 ###4.1 Running the Main RPi_ADXL Scripts
+####mainADXL.py
+Run mainADXL.py with `sudo python3 mainADXL.py`
+`sudo` is required for this as linux requires `sudo` permissions to interface with the i2c bus in order to communicate with the ADXL.
+
+The script will then display some options. These are self-explanatory and you can refer to the [settings.ini section](https://github.com/theSpeare/RPi_ADXL#31-rpi_settingsini). All these default input settings can be configured via RPi_settings.ini and will load upon restarting the script.
+
+####uploadADXL.py
+Run uploadADXL.py with `sudo python3 uploadADXL.py`
+`sudo` may not be required for this, but we will use it anyway to be careful.
+
+Same as mainADXL.py, the script will ask you if you wish to use default values loaded from the RPi_settings.ini file.
+
+Both scripts have verbose screen outputs that should not be too difficult to understand. Please ask the developer if you need any further explanation for each output line, otherwise you can always look through the .py scripts yourself in the source and investigate.
+
+####Skipping Input Stage
+Both scripts can be run with an argument from the console to skip the input stage in either script and just use default config values. To do this, you simply add "-s" or "--skipinput" at the end of your python call command.
+
+For example:
+`sudo python3 mainADXL.py -s`
+`sudo python3 uploadADXL.py -s`
+
+This will allow you to quickly start the scripts without having to input anything. This will also be even more useful when we use Screen.
+
+
+<br><br><br>
 ###4.2 Running the Scripts with Screen
+
+
+
+<br><br><br>
 ###4.3 Killing the Scripts
