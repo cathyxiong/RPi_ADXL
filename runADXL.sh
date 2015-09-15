@@ -3,8 +3,8 @@
 # Closes screens currently running
 # Probably won't interrupt scripts ongoing though
 
-screen -S main -X quit
-screen -S upload -X quit
+killall screen
+killall python3
 
 screen -dmS main
 screen -dmS upload
