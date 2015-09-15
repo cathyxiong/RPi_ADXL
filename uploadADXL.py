@@ -7,6 +7,7 @@ from collections import deque
 from configparser import ConfigParser
 import os
 import sys
+import argparse
 from time import *
 from datetime import datetime
 
@@ -80,6 +81,18 @@ def checkUserAnswer(input):
 	else:
 		return False	
 
+def checkUserSkip():
+	# We use Argument Parser to read if script was run with any shell arguments
+	# This way we can easily start scripts and skip all user input
+	argParser = argparse.ArgumentParser()
+	argParser.add_argument("-s", "--skipinput", action ="store_true", 
+						help="Skip user input")
+	args = argParser.parse_args()
+	if args.skipinput:
+		return True
+	else:
+		return False
+		
 def log(description, save = True, printScreen = True):
 	if (save):
 		logList.append((str(datetime.now()) + " - ") + description)
@@ -172,6 +185,10 @@ def clearScreen():
 #### MAIN PROGRAM STARTS HERE ########################################################################
 clearScreen()
 
+# Grab external args if we're skipping input
+# For example, running in shell: "python3 mainADXL.py -s" will skip input
+skipInput = checkUserSkip()
+
 # Retrieve all settings for upload
 settings = getRPiSettings()
 
@@ -179,10 +196,11 @@ settings = getRPiSettings()
 applyRPiSettings(settings)
 
 # Print out settings
-printUploadSettings(settings)
-qString = "Use this upload interval? [" + str(uploadInterval/60) + " minutes] (y\\n) "
-if checkUserAnswer(input(qString)) == False:
-	uploadInterval = float(input("\nHow often to check and upload (in minutes): ")) * 60
+if skipInput == False:
+	printUploadSettings(settings)
+	qString = "Use this upload interval? [" + str(uploadInterval/60) + " minutes] (y\\n) "
+	if checkUserAnswer(input(qString)) == False:
+		uploadInterval = float(input("\nHow often to check and upload (in minutes): ")) * 60
 	
 # First scan the folder for files and grab files
 while True:

@@ -6,9 +6,11 @@ import time
 
 import os
 import random
+import argparse
 
 from configparser import ConfigParser
 from collections import deque
+
 
 # Declare ADXL345 class from adxl345 library
 # generateZeroData is a debug tool to keep the script running if
@@ -53,7 +55,7 @@ checkForSignificance = True
 axisOrientationInfo = ["z", "x", "y"]
 
 # Folder to store files
-dataFolder = "POOP/"
+dataFolder = "dataFolder/"
 
 def checkListForSignificance(dataList):
 	x_threshold = significanceThresholds[0]
@@ -77,7 +79,19 @@ def checkUserAnswer(input):
 		return True
 	else:
 		return False
-	
+
+def checkUserSkip():
+	# We use Argument Parser to read if script was run with any shell arguments
+	# This way we can easily start scripts and skip all user input
+	argParser = argparse.ArgumentParser()
+	argParser.add_argument("-s", "--skipinput", action ="store_true", 
+						help="Skip user input")
+	args = argParser.parse_args()
+	if args.skipinput:
+		return True
+	else:
+		return False
+		
 def clearScreen():
 	os.system('clear')
 
@@ -283,6 +297,12 @@ def userInputDialog(settings):
 ####################################################################################	
 #### MAIN PROGRAM STARTS HERE ######################################################
 
+clearScreen()
+
+# Grab external args if we're skipping input
+# For example, running in shell: "python3 mainADXL.py -s" will skip input
+skipInput = checkUserSkip()
+	
 ####### Retrieve settings.ini values
 settings = getRPiSettings()
 applyRPiSettings(settings)
@@ -295,8 +315,9 @@ clearScreen()
 #######
 
 ####### INPUT INITIAL VALUES
-settings = userInputDialog(settings)
-clearScreen()
+if skipInput == False:
+	settings = userInputDialog(settings)
+	clearScreen()
 #######
 
 # Log when script is initiated again
