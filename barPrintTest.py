@@ -47,7 +47,7 @@ def getCalibrationOffsets ():
 	
 	x_fix = (x_average / len(calibrateList))*-1
 	y_fix = (y_average / len(calibrateList))*-1
-	z_fix = ((z_average / len(calibrateList))*-1)+1
+	z_fix = ((z_average / len(calibrateList))*-1)
 	
 	return (x_fix, y_fix, z_fix)
 

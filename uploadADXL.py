@@ -156,11 +156,11 @@ def disconnectFromSCPHost(SCPSession):
 	return SCPSession.close()
 	
 	
-def uploadFile(fileName, SCPSession, location):
+def uploadFile(fileName, SCPSession, uploadDirectory):
 	log("Uploading " + fileName)
 	try:
 		localFile = plumbum.local.path(fileName)
-		remoteDestination = SCPSession.path(location + piID + "/")
+		remoteDestination = SCPSession.path(uploadDirectory + piID + "/")
 		plumbum.path.utils.copy(localFile, remoteDestination)
 	except Exception as error:
 		log("!!! ERROR - uploadFile()- failed to up: " + fileName)
@@ -174,7 +174,7 @@ def uploadTheQueue(uploadQueue, SCPSession, uploadDirectory):
 	log("Uploading [" + str(len(uploadQueue)) + "] data files in queue...")
 	log("Uploading to remote server in " + uploadDirectory)
 	while uploadQueue:
-		uploadFile(uploadQueue.popleft(), SCPSession, location=uploadDirectory)
+		uploadFile(uploadQueue.popleft(), SCPSession, uploadDirectory)
 
 		
 def clearScreen():
