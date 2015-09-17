@@ -8,19 +8,18 @@ import os
 import random
 import argparse
 
+import multiprocessing
+from multiprocessing import Process, Queue
+
 from configparser import ConfigParser
 from collections import deque
 
+# plumbum used for uploading via ssh SCP (must be downloaded via pip)
+import plumbum
 
 # Declare ADXL345 class from adxl345 library
-# generateZeroData is a debug tool to keep the script running if
-# the ADXL does initialize due to some error
-try:
-	myADXL = i2c_adxl345.i2c_adxl345(1)
-	generateZeroData = False
-except:
-	myADXL = 0
-	generateZeroData = True
+
+myADXL = i2c_adxl345.i2c_adxl345(1)
 	
 piID = "RPi_Unassigned"
 
@@ -58,6 +57,9 @@ axisOrientationInfo = ["z", "x", "y"]
 
 # Folder to store files
 dataFolder = "dataFolder/"
+
+# Queue for files yet to be uploaded
+uploadQueue = Queue()
 
 def checkListForSignificance(dataList):
 	x_threshold = significanceThresholds[0]
@@ -143,9 +145,9 @@ def getXYZtFromPacket(packet):
 
 def getData():
 	(x, y, z) = myADXL.getAxes()
-	time = str(datetime.now())
+	time = datetime.now()
 	(x, y, z) = calibrateAxesValues(x, y, z)
-	axesPacket = [x, y, z, time]
+	axesPacket = [x, y, z, str(time)]
 	return axesPacket
 
 def getRPiSettings(settingsLocation = "RPi_settings.ini"):
@@ -153,41 +155,52 @@ def getRPiSettings(settingsLocation = "RPi_settings.ini"):
 	settings.read(settingsLocation)
 	
 	settingsDict = {}
+	mainSettings = dict(settings.items("Main"))
+	uploadSettings = dict(settings.items("Upload"))
+	
+	# Combine the above into one settings dict
+	settingsDict = mainSettings.copy()
+	settingsDict.update(uploadSettings)
+	
+	# Convert the following variables listed below into float/bools
+	floatSettings = ["adxl_interval", "save_interval", "x_thresh", "y_thresh", "z_thresh"]
+	booleanSettings = ["checkforsignificance", "uploading"]
+	
+	for setting in settingsDict:
+		if setting in floatSettings:
+			settingsDict[setting] = float(settingsDict[setting])
+		if setting in booleanSettings:
+			settingsDict[setting] = (settingsDict[setting] == "True")
+		
+	#settingsDict["counterMax"] = (settingsDict["save_interval"]*60)/settingsDict["adxl_interval"]
 	settingsDict["piID"] = settings["RPi"]["piID"]
-	
-	# Distinguish between strings/numbres/boolean so we can convert them
-	settingsToGrabNumbers = ["adxl_interval", "save_interval", "x_thresh", "y_thresh", "z_thresh"]
-	settingsToGrabStrings = ["up_orient", "east_orient", "north_orient"]
-	settingsToGrabBoolean = ["checkForSignificance"]
-	
-	for type in settingsToGrabStrings:
-		settingsDict[type] = settings["Main"][type]
-		
-	for type in settingsToGrabNumbers:
-		settingsDict[type] = float(settings["Main"][type])
-		
-	for type in settingsToGrabBoolean:
-		settingsDict[type] = (settings["Main"][type] == "True")
-	
-	settingsDict["counterMax"] = (settingsDict["save_interval"]*60)/settingsDict["adxl_interval"]
-	settingsDict["dataFolder"] = settings["Upload"]["dataFolder"]
+	settingsDict["countermax"] = (settingsDict["save_interval"])/settingsDict["adxl_interval"]
 	
 	return settingsDict
+
 
 def applyRPiSettings(settings):
 	# Translate to normal variables for readability
 	# It pains me to use these global variables
 	global piID, interval, counterMaxTime, counterMax, checkForSignificance
 	global significanceThresholds, axisOrientationInfo, dataFolder
+	global uploadUser, uploadHost, uploadDirectory, uploadInterval, uploading
 	
 	piID = settings["piID"]
 	interval = settings["adxl_interval"]
 	counterMaxTime = settings["save_interval"]
-	counterMax = (counterMaxTime*60)/interval
-	checkForSignificance = settings["checkForSignificance"]
+	counterMax = settings["countermax"]
+	checkForSignificance = settings["checkforsignificance"]
 	significanceThresholds = [settings["x_thresh"], settings["y_thresh"], settings["z_thresh"]]
 	axisOrientationInfo = [settings["up_orient"], settings["north_orient"], settings["east_orient"]]
-	dataFolder = settings["dataFolder"]
+	dataFolder = settings["datafolder"]
+	piID = settings["piID"]
+	dataFolder = settings["datafolder"]
+	uploadUser = settings["uploaduser"]
+	uploadHost = settings["uploadhost"]
+	uploadDirectory = settings["uploaddirectory"]
+	uploadInterval = settings["uploadinterval"]
+	uploading = settings["uploading"]
 	
 def printSettings(title):
 	# This DOES NOT print whatever is in the settings dict
@@ -197,16 +210,20 @@ def printSettings(title):
 	print ("\n######### " + title + " #########")
 	print ("RPi ID: " + piID)
 	print ("Interval: " + str(interval))
-	print ("Counts per file: " + str(counterMax) + " - approx: " + str(counterMaxTime) + " minutes")
+	print ("Counts per file: " + str(counterMax) + " - approx: " + str(counterMaxTime) + " seconds")
 	print ("Checking for Significance - " + str(checkForSignificance))
 	print ("Significance Thresholds - " + str(significanceThresholds))
 	print ("Saving to - " + dataFolder)
 	print ("Axis Orientation (UP/DOWN, NORTH/SOUTH, EAST/WEST): " + str(axisOrientationInfo))
-
-	# Print a warning if we're generating zero data
-	if generateZeroData:
-		print("\n!! - WARNING - FAILED TO INITIALIZE ADXL CLASS")
-		print("!! - WARNING - NOT GENERATING ACTUAL ADXL DATA !!!")
+	print("\n######### UPLOAD SETTINGS")
+	if (uploading):
+		print("Uploading to: " + uploadUser + "@" + uploadHost)
+		print("Uploading every (default): " + str(uploadInterval))
+		print("Remote data folder: " + uploadDirectory)
+	else:
+		print("NOT UPLOADING")
+	
+	
 	
 def strConvertAxes (x,y,z):
 	return (str(x),str(y),str(z))
@@ -218,7 +235,7 @@ def logScriptStart():
 	logFile.write("## mainADXL.py reinitiated @ " + str(datetime.now()) + " ##\n")
 	logFile.close()
 	
-def writeToDisk(dataList):
+def writeToDisk(dataList, uploadQueue):
 	# Append date to filename
 	fileDate = datetime.now().strftime("[%Y-%m-%d_%H-%M-%S]")
 	
@@ -254,20 +271,29 @@ def writeToDisk(dataList):
 		(x,y,z) = strConvertAxes(x,y,z)
 		mainDataFile.write(x + " " + y + " " + z + " " + str(time) + "\n")
 	
+	# Write "end" to bottom of file to mark that file has been fully written/uploaded
+	mainDataFile.write("end")
+	
 	# Close mainDataFile
 	mainDataFile.close()
 	
 	# Enter log that data was successfully written
 	logString = ('File written @ ' + str(datetime.now())
 				+ ' | Lost: ' + str(counterError))
+	
 				
 	logDataFile.write(logString + '\n')
 	print(logString)
 	logDataFile.close()
 	
+	# Don't bother uploading log files anymore
+	# Add file that's been finished written to uploadqueue
+	uploadQueue.put((dataFolder + piID + '_data_' + fileDate))
+	
 def userInputDialog(settings):
 	while True:
 		clearScreen()
+		applyRPiSettings(settings)
 		print ("######### RPi Online Smart Building Monitoring #########")
 		print ("Written by Lui Villarias")
 		
@@ -281,20 +307,55 @@ def userInputDialog(settings):
 		
 		# Ask for save interval
 		settings["save_interval"] = float(input("\n>> Approximate save interval (minutes): "))
-		settings["counterMax"] = (settings["save_interval"] * 60) / settings["adxl_interval"] # convert to counts
+		settings["countermax"] = (settings["save_interval"]) / settings["adxl_interval"] # convert to counts
+		#settings["counterMax"] = (settings["save_interval"] * 60) / settings["adxl_interval"] # convert to counts
 		
 		# Ask if significance thresholds will be used
-		settings["checkForSignificance"] = checkUserAnswer(input("\n>> Save only significant data? (y\\n): "))
+		settings["checkforsignificance"] = checkUserAnswer(input("\n>> Save only significant data? (y\\n): "))
+		
+		settings["uploading"] = checkUserAnswer(input("\n>> Uploading to remote host (internet)? (y\\n): "))
 		
 		applyRPiSettings(settings)
 		
 	return settings
-	
-	
-	
-## TO DO
-# write switch axes function
 
+def uploadTheQueue(uploadQueue, uploadUser, uploadHost, uploadDirectory, remoteDestination):
+	print("Uploader started")
+	
+	while True:
+		# get() will wait for new files to be added to the list by
+		# fileWriter threads
+		dataFile = uploadQueue.get()
+		# Copy file through SCP
+		#print("Attempting to upload - " + dataFile)
+		try:
+			localFile = plumbum.local.path(dataFile)
+			plumbum.path.utils.copy(localFile, remoteDestination)
+			print(dataFile + " uploaded")
+		except:
+			print(dataFile + " FAILED TO UPLOAD")
+					
+
+def fetchDataList(interval, counterMax):
+	counter = 0
+	dataList = []
+	
+	while counter < counterMax:
+		dataList.append(getData())
+		counter += 1
+		sleep(interval)
+		
+	return dataList
+
+def startThread_FileWriter(dataList, uploadQueue):
+	thread_FileWriter = Process(name="FileWriter", target=writeToDisk, args=(dataList, uploadQueue,))
+	thread_FileWriter.daemon = True
+	thread_FileWriter.start()	
+	
+def startThread_Uploader(uploadQueue, uploadUser, uploadHost, uploadDirectory,remoteDestination):
+	thread_Uploader = Process(name="Uploader", target=uploadTheQueue, args=(uploadQueue, uploadUser, uploadHost, uploadDirectory,remoteDestination,))
+	thread_Uploader.daemon = True
+	thread_Uploader.start()
 
 ####################################################################################	
 #### MAIN PROGRAM STARTS HERE ######################################################
@@ -311,8 +372,7 @@ applyRPiSettings(settings)
 
 ####### CALIBRATION
 # Get current values from resting ADXL345, average, and use to "calibrate"
-if (generateZeroData == False):
-	calibrationValues = getCalibrationOffsets()
+calibrationValues = getCalibrationOffsets()
 clearScreen()	
 #######
 
@@ -330,24 +390,34 @@ logScriptStart()
 printSettings("RPi_ADXL RUNNING")
 print ("\nStarted @ " + str(datetime.now()) + "\n\n")
 
+##### INITIATE UPLOAD THREAD and UPLOAD QUEUE
+# Declare queue that can be shared between processes
+uploadQueue = multiprocessing.Queue()
+
+# Initiate upload workers
+if uploading:
+	print("Connecting to SCP Session - " + uploadUser + "@" + uploadHost)
+	SCPSession = plumbum.machines.SshMachine(uploadHost, user=uploadUser, keyfile="/home/pi/.ssh/upload")
+	remoteDestination = SCPSession.path(uploadDirectory + piID + "/")
+	
+	# We will create n upload workers
+	# So that we can upload n files simultaneously if needed
+	uploaderWorkerAmount = 10
+	for i in range(0, uploaderWorkerAmount):
+		startThread_Uploader(uploadQueue, uploadUser, uploadHost, uploadDirectory, remoteDestination)
+	
+	#SCPSession.close()
+
+
 # Using "try" to ignore count losses from I/O errors
 while True:
 	try:	
 		# Grab axes values from ADXL and add to dataList
-		if (generateZeroData == False):
-			dataList.append(getData())
-		else:
-			dataList.append([0,0,0,str(datetime.now())])
-			
-		counter += 1
-		
-		if counter > counterMax:
-			writeToDisk(dataList)
-			dataList = []
-			counter = 0
-			counterError = 0
-		
+		dataList = fetchDataList(interval, counterMax)	
+		startThread_FileWriter(dataList, uploadQueue)
+
+		counterError = 0
 	except IOError:
 		counterError += 1
-	
-	sleep(interval)
+		
+SCPSession.close()
