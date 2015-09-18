@@ -398,6 +398,7 @@ uploadQueue = multiprocessing.Queue()
 if uploading:
 	print("Connecting to SCP Session - " + uploadUser + "@" + uploadHost)
 	SCPSession = plumbum.machines.SshMachine(uploadHost, user=uploadUser, keyfile="/home/pi/.ssh/upload")
+	print("Connected!")
 	remoteDestination = SCPSession.path(uploadDirectory + piID + "/")
 	
 	# We will create n upload workers
