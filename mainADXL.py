@@ -350,7 +350,7 @@ def fetchDataList(interval, counterMax):
 def startThread_FileWriter(dataList, uploadQueue):
 	thread_FileWriter = Process(name="FileWriter", target=writeToDisk, args=(dataList, uploadQueue,))
 	thread_FileWriter.daemon = True
-	thread_FileWriter.start()	
+	thread_FileWriter.start()
 	
 def startThread_Uploader(uploadQueue, uploadUser, uploadHost, uploadDirectory,remoteDestination):
 	thread_Uploader = Process(name="Uploader", target=uploadTheQueue, args=(uploadQueue, uploadUser, uploadHost, uploadDirectory,remoteDestination,))

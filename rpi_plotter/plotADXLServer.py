@@ -28,6 +28,7 @@ from multiprocessing import Process, Queue
 #piIDList = ["RPi-Lui", "RPi-Denny"]
 filesAlreadyRead = []
 plotQueue = []
+alreadyPlotted = []
 
 def getPlotterSettings(location = "plot_settings.ini"):
 	# Use ConfigParser to parse from .ini file for settings
@@ -76,6 +77,11 @@ def generatePlotData(dataRPi, maxCount, dataFolder, piID):
 	dataElementList = ["x", "y", "z", "time"]
 	
 	plotQueue = generatePlotQueue(dataFolder, piID)
+
+	if plotQueue:
+		alreadyPlotted.append(False)	
+	else:
+		alreadyPlotted.append(True)
 	
 	while plotQueue:	
 		data_plot = vars(dataRPi.data_plot)
@@ -111,14 +117,11 @@ def generatePlotData(dataRPi, maxCount, dataFolder, piID):
 		for dataElement in dataElementList:
 			setattr(dataRPi.data_plot, dataElement, data_plot[dataElement])
 			setattr(dataRPi.data_overflow, dataElement, data_overflow[dataElement])
-		
+	
 	return dataRPi
 		
-def plotAllAxes(data_RPi_All, piID, saveLocation):
-	# PLOTS FOR ONE PI
-	# Using axesList as "time" is in data_plot
-	print("Printing all graphs")
-	axesList = ["x", "y", "z"]
+def plotAllRPi(data_RPi_All, saveLocation, axisToPlot):
+	print("Plotting - " + axisToPlot)
 	
 	totalPi = len(data_RPi_All)
 	
@@ -135,11 +138,11 @@ def plotAllAxes(data_RPi_All, piID, saveLocation):
 	for pi in data_RPi_All:
 		# Check if pi data_plot actually has data before passing it to be plotted
 		if (data_RPi_All[pi].data_plot.x):
+			y_axis = getattr(data_RPi_All[pi].data_plot, axisToPlot)
 			time_axis = data_RPi_All[pi].data_plot.time
-			y_axis = data_RPi_All[pi].data_plot.z
 			print(pi + " | position: " + str(position))
 			graph_array[position].plot(time_axis, y_axis)
-			graph_array[position].set_title(str(pi))
+			graph_array[position].set_title(str(pi) + " - " + axisToPlot)
 			position += 1
 	
 	
@@ -148,7 +151,6 @@ def plotAllAxes(data_RPi_All, piID, saveLocation):
 		ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M:%S'))
 		ax.yaxis.set_ticks([-2,-1,0,1,2])
 		ax.grid(True)
-		ax.set_ylabel("Accel (g)")
 		
 	plt.xlabel('Time', fontsize=18)
 	
@@ -182,12 +184,12 @@ def plotAllAxes(data_RPi_All, piID, saveLocation):
 	plt.axis((startOfGraph, endOfGraph, -2.0, 2.0))
 	plt.xticks(x_ticks, rotation='vertical')
 	
-	plt.savefig(saveLocation + "/plot_z.png")
+	plt.savefig(saveLocation + "/plot_" + axisToPlot + ".png")
 	
 	plt.clf()
 	plt.close("all")
 		
-	print("Printing complete")
+	print("Plot " + axisToPlot + " complete!")
 	return True
 
 def anyDataExists(data_RPi_All):
@@ -276,6 +278,12 @@ def getFilenameFromAddress(filename):
 
 def clearScreen():
 	os.system('clear')		
+
+def startThread_Plotter(data_RPi_All, saveLocation, axisToPlot):
+	thread_Plotter = Process(name="plotter_worker", target=plotAllRPi, args=(data_RPi_All, saveLocation, axisToPlot,))
+	thread_Plotter.daemon = True
+	thread_Plotter.start()
+	return thread_Plotter
 	
 ######################################################################################################	 
 #### MAIN PROGRAM STARTS HERE ########################################################################	
@@ -289,6 +297,8 @@ printPlotterSettings()
 maxCount = 6000
 ignoringExistingData = True
 
+plotterWorkerList = []
+
 data_RPi_All = generateRPiDataStructure(piIDList)
 
 if ignoringExistingData:
@@ -296,10 +306,21 @@ if ignoringExistingData:
 
 while True:
 	clearScreen()
+	alreadyPlotted = []
 	for piID in piIDList:
 		data_RPi_All[piID] = generatePlotData(data_RPi_All[piID], maxCount, dataFolder, piID)
-	if anyDataExists(data_RPi_All):
-		plotAllAxes(data_RPi_All, piID, saveLocation)
+	if (anyDataExists(data_RPi_All)) and (False in alreadyPlotted):
+		for axisToPlot in ["x", "y", "z"]:
+		#plotAllRPi(data_RPi_All, piID, saveLocation, axisToPlot)
+			plotterWorker = startThread_Plotter(data_RPi_All, saveLocation, axisToPlot)
+			plotterWorkerList.append(plotterWorker)
 	
+		print("---> Waiting for all plots to complete")
+		for plotter in plotterWorkerList:
+			plotter.join()
+		print("---> All plots to complete")
+		alreadyPlotted = True
+	elif (True in alreadyPlotted):
+		print("Already plotted latest file!")
 	print("\nWaiting for new graphs")
 	sleep(0.5)
