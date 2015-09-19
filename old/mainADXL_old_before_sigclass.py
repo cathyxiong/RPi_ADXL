@@ -51,6 +51,9 @@ z_threshold = 0.4
 significanceThresholds = [x_threshold, y_threshold, z_threshold]
 checkForSignificance = True
 
+# notSignificantCount counts how many data files we've grabbed that's insignificant
+notSignificantCount = 0
+
 # Declare axis information (for reference)
 # Up/Down, North/South, East/West
 axisOrientationInfo = ["z", "x", "y"]
@@ -61,81 +64,20 @@ dataFolder = "dataFolder/"
 # Queue for files yet to be uploaded
 uploadQueue = Queue()
 
-class significanceBuffer():
-	# timeNotSignificant is the stopwatch for how long we've gone so far without anything significant
-	# bufferTime is how many seconds we should buffer
-	# all in seconds
+def checkListForSignificance(dataList):
+	x_threshold = significanceThresholds[0]
+	y_threshold = significanceThresholds[1]
+	z_threshold = significanceThresholds[2]
 	
-	def __init__(self):
-		self.bufferList = []
-		self.bufferTime = 3
-		self.timeNotSig = 0
-		self.sleepTimeMax = 3
-		self.sleeping = False
-		
-		self.x_threshold = 0.1
-		self.y_threshold = 0.1
-		self.z_threshold = 0.1
-	
-	def processData(self, dataList, interval):
-		if self.checkListForSignificance(dataList):
-			# if recent packet is significant, wake up!
-			self.timeNotSig = 0
-			
-			if self.sleeping:
-				print("-> Waking up! Activity detected @ " + str(datetime.now()))
-				self.sleeping = False
-				return (self.bufferList + dataList)
-			else:
-				return dataList
-			
-		else: # if not significant:
-			# if sleeping, do buffer tasks
-			if self.sleeping:
-				self.addToBufferList(dataList, interval)
-				return dataList
-			else: # if not sleeping, track and check if we should put to sleep
-				self.timeNotSig += (len(dataList)*interval)
-				if self.timeNotSig > self.sleepTimeMax:
-					print("-> Sleeping due to inactivity @ " + str(datetime.now()))
-					self.sleeping = True
-				return dataList
-				
-	def addToBufferList(self, dataList, interval):
-		# Append dataList to bufferList
-		self.bufferList += dataList
-		
-		# if bufferLists exceeds our bufferTime, remove
-		# from the leftmost on the list instead of clearing list
-		if (len(self.bufferList)*interval > self.bufferTime):
-			self.bufferList = self.bufferList[len(dataList):]
-
-	def setThresholds(self, x, y, z):
-		self.threshold_x = x
-		self.threshold_y = y
-		self.threshold_z = z
-	
-	def getXYZtFromPacket(packet):
-		x = packet[0]
-		y = packet[1]
-		z = packet[2]
-		time = packet[3]
-		return (x, y, z, time)
-		
-	def checkListForSignificance(self, dataList):
-		for packet in dataList:
-			(x, y, z, time) = getXYZtFromPacket(packet)
-			if x > self.x_threshold or x < (self.x_threshold * -1):
-				return True
-			if y > self.y_threshold or y < (self.y_threshold * -1):
-				return True
-			if z > self.z_threshold or z < (self.z_threshold * -1):
-				return True
-		
-		return False
-	
-
-
+	for packet in dataList:
+		(x, y, z, time) = getXYZtFromPacket(packet)
+		if x > x_threshold or x < (x_threshold * -1):
+			return True
+		if y > y_threshold or y < (y_threshold * -1):
+			return True
+		if z > z_threshold or z < (z_threshold * -1):
+			return True
+	return False
 
 def checkUserAnswer(input):
 	yes = ["yes", "ye", "y", "1", "ok"]
@@ -300,6 +242,19 @@ def writeToDisk(dataList, uploadQueue):
 	# Append date to filename
 	fileDate = datetime.now().strftime("[%Y-%m-%d_%H-%M-%S]")
 	
+	# Open log file
+	logDataFile = open(dataFolder + piID + '_log', 'a')
+	
+	# If prompted to check and list has NO significant values, record that no data was significant
+	if checkForSignificance and (checkListForSignificance(dataList) == False):
+		logString = ('No significant data @ ' + str(datetime.now())
+					+ ' | Lost: ' + str(counterError))
+		logDataFile.write(logString + '\n')
+		print(logString)
+		
+		logDataFile.close()
+		return
+	
 	# Open data file
 	mainDataFile = open(dataFolder + piID + '_data_' + fileDate, 'w')
 	
@@ -328,8 +283,11 @@ def writeToDisk(dataList, uploadQueue):
 	# Enter log that data was successfully written
 	logString = ('[FW] Wrote @ ' + str(datetime.now())
 				+ ' | Lost: ' + str(counterError))
-
+	
+				
+	logDataFile.write(logString + '\n')
 	print(logString)
+	logDataFile.close()
 	
 	# Don't bother uploading log files anymore
 	# Add file that's been finished written to uploadqueue
@@ -439,7 +397,7 @@ print ("\nStarted @ " + str(datetime.now()) + "\n\n")
 
 ##### INITIATE UPLOAD THREAD and UPLOAD QUEUE
 # Declare queue that can be shared between processes
-uploadQueue = Queue()
+uploadQueue = multiprocessing.Queue()
 
 # Initiate upload workers
 if uploading:
@@ -456,21 +414,13 @@ if uploading:
 	
 	#SCPSession.close()
 
-# Start significance buffer class
-significanceBuffer = significanceBuffer()
 
 # Using "try" to ignore count losses from I/O errors
 while True:
 	try:	
 		# Grab axes values from ADXL and add to dataList
-		dataList = fetchDataList(interval, counterMax)
-		
-		if checkForSignificance:
-			dataList = significanceBuffer.processData(dataList, interval)
-		
-		# If we're not sleeping, write the file. Otherwise sleep.
-		if (not significanceBuffer.sleeping) and checkForSignificance:
-			startThread_FileWriter(dataList, uploadQueue)
+		dataList = fetchDataList(interval, counterMax)	
+		startThread_FileWriter(dataList, uploadQueue)
 		
 		counterError = 0
 	except IOError:

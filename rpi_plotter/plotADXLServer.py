@@ -77,7 +77,8 @@ def generatePlotData(dataRPi, maxCount, dataFolder, piID):
 	dataElementList = ["x", "y", "z", "time"]
 	
 	plotQueue = generatePlotQueue(dataFolder, piID)
-
+		
+	
 	if plotQueue:
 		alreadyPlotted.append(False)	
 	else:
@@ -86,7 +87,7 @@ def generatePlotData(dataRPi, maxCount, dataFolder, piID):
 	while plotQueue:	
 		data_plot = vars(dataRPi.data_plot)
 		data_overflow = vars(dataRPi.data_overflow)
-	
+		
 		if ((len(data_plot["x"])) >= maxCount):
 			for dataElement in dataElementList:
 				#data_plot[dataElement] = data_plot[dataElement][1500:] + data_overflow[dataElement]
@@ -117,7 +118,7 @@ def generatePlotData(dataRPi, maxCount, dataFolder, piID):
 		for dataElement in dataElementList:
 			setattr(dataRPi.data_plot, dataElement, data_plot[dataElement])
 			setattr(dataRPi.data_overflow, dataElement, data_overflow[dataElement])
-	
+			
 	return dataRPi
 		
 def plotAllRPi(data_RPi_All, saveLocation, axisToPlot):
@@ -185,13 +186,13 @@ def plotAllRPi(data_RPi_All, saveLocation, axisToPlot):
 	plt.xticks(x_ticks, rotation='vertical')
 	
 	plt.savefig(saveLocation + "/plot_" + axisToPlot + ".png")
-	
+	plt.savefig(location)
 	plt.clf()
 	plt.close("all")
 		
 	print("Plot " + axisToPlot + " complete!")
 	return True
-
+	
 def anyDataExists(data_RPi_All):
 	for pi in data_RPi_All:
 		if data_RPi_All[pi].data_plot.x:
@@ -201,13 +202,12 @@ def anyDataExists(data_RPi_All):
 def ignoreExistingData(dataFolder, piIDList):
 	# We will add to the "filesAlreadyRead" everything inside the data folder
 	# This is to start completely fresh before the plotter begins
+	dataFilenameList = []
 	
 	for piID in piIDList:
 		searchString = dataFolder + piID + "/" + piID + "_data*"
-		dataFilenameList = glob(searchString)
-	
-	for filename in dataFilenameList:
-		filesAlreadyRead.append(filename)
+		for filename in glob(searchString):
+			filesAlreadyRead.append(filename)
 		
 	
 def generatePlotQueue(dataFolder, piID):
@@ -236,7 +236,7 @@ def getDataFromFile(dataFilename):
 			if "end" in line:
 				fileIsNotFullyUploaded = False
 		dataFile.close()
-
+		
 	dataFile = open(dataFilename, "r")
 	x = []
 	y = []
@@ -265,7 +265,7 @@ def getDataFromFile(dataFilename):
 	data_container.y = y
 	data_container.z = z
 	data_container.time = time
-
+	
 	return data_container
 
 
@@ -281,7 +281,7 @@ def clearScreen():
 
 def startThread_Plotter(data_RPi_All, saveLocation, axisToPlot):
 	thread_Plotter = Process(name="plotter_worker", target=plotAllRPi, args=(data_RPi_All, saveLocation, axisToPlot,))
-	thread_Plotter.daemon = True
+	thread_Plotter.daemon = False
 	thread_Plotter.start()
 	return thread_Plotter
 	
@@ -303,23 +303,25 @@ data_RPi_All = generateRPiDataStructure(piIDList)
 
 if ignoringExistingData:
 	ignoreExistingData(dataFolder, piIDList)
-
+	
 while True:
 	clearScreen()
 	alreadyPlotted = []
+	
 	for piID in piIDList:
 		data_RPi_All[piID] = generatePlotData(data_RPi_All[piID], maxCount, dataFolder, piID)
+	
 	if (anyDataExists(data_RPi_All)) and (False in alreadyPlotted):
 		for axisToPlot in ["x", "y", "z"]:
-		#plotAllRPi(data_RPi_All, piID, saveLocation, axisToPlot)
 			plotterWorker = startThread_Plotter(data_RPi_All, saveLocation, axisToPlot)
 			plotterWorkerList.append(plotterWorker)
-	
+			
 		print("---> Waiting for all plots to complete")
 		for plotter in plotterWorkerList:
 			plotter.join()
 		print("---> All plots to complete")
 		alreadyPlotted = True
+		
 	elif (True in alreadyPlotted):
 		print("Already plotted latest file!")
 	print("\nWaiting for new graphs")
