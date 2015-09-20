@@ -469,7 +469,7 @@ while True:
 			dataList = significanceBuffer.processData(dataList, interval)
 		
 		# If we're not sleeping, write the file. Otherwise sleep.
-		if (not significanceBuffer.sleeping) and checkForSignificance:
+		if (not significanceBuffer.sleeping) or (not checkForSignificance):
 			startThread_FileWriter(dataList, uploadQueue)
 		
 		counterError = 0
