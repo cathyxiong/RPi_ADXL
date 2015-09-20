@@ -7,6 +7,7 @@ import time
 import os
 import random
 import argparse
+import sys
 
 import multiprocessing
 from multiprocessing import Process, Queue
@@ -288,13 +289,6 @@ def printSettings(title):
 	
 def strConvertAxes (x,y,z):
 	return (str(x),str(y),str(z))
-
-def logScriptStart():
-	# This function stores an extra line to log whenever mainADXL is reinitiated
-	fileName = dataFolder + piID + "_log"
-	logFile = open(fileName, 'a')		
-	logFile.write("## mainADXL.py reinitiated @ " + str(datetime.now()) + " ##\n")
-	logFile.close()
 	
 def writeToDisk(dataList, uploadQueue):
 	# Append date to filename
@@ -373,14 +367,16 @@ def uploadTheQueue(uploadQueue, uploadUser, uploadHost, uploadDirectory, remoteD
 		dataFile = uploadQueue.get()
 		# Copy file through SCP
 		#print("Attempting to upload - " + dataFile)
-		try:
-			localFile = plumbum.local.path(dataFile)
-			plumbum.path.utils.copy(localFile, remoteDestination)
-			print("[U" + uploaderID + "] - " + dataFile + " uploaded")
-		except:
-			print("[U" + uploaderID + "] - " + dataFile + " FAILED")
-			# Re-insert data file back into the queue for uploading again later
-			uploadQueue.put(dataFile)
+		
+		while True:
+			try:
+				localFile = plumbum.local.path(dataFile)
+				plumbum.path.utils.copy(localFile, remoteDestination)
+				print("[U" + uploaderID + "] - " + dataFile + " uploaded")
+				break
+			except:
+				pass
+				print("[U" + uploaderID + "] - " + dataFile + " FAILED")
 					
 
 def fetchDataList(interval, counterMax):
@@ -429,11 +425,9 @@ if skipInput == False:
 	clearScreen()
 #######
 
-# Log when script is initiated again
-logScriptStart()
-
 ####### INITIATE MAIN PROGRAM LOOP
 # Do not clear screen here - leave a summary log per file written
+	
 printSettings("RPi_ADXL RUNNING")
 print ("\nStarted @ " + str(datetime.now()) + "\n\n")
 
@@ -444,8 +438,10 @@ uploadQueue = Queue()
 # Initiate upload workers
 if uploading:
 	print("Connecting to SCP Session - " + uploadUser + "@" + uploadHost)
+	t1 = datetime.now()
 	SCPSession = plumbum.machines.SshMachine(uploadHost, user=uploadUser, keyfile="/home/pi/.ssh/upload")
-	print("Connected!")
+	print("Connected in ", end="")
+	print(datetime.now()-t1)
 	remoteDestination = SCPSession.path(uploadDirectory + piID + "/")
 	
 	# We will create n upload workers
