@@ -88,13 +88,19 @@ def generatePlotData(dataRPi, maxCount, dataFolder, piID):
 		data_plot = vars(dataRPi.data_plot)
 		data_overflow = vars(dataRPi.data_overflow)
 		
-		if ((len(data_plot["x"])) >= maxCount):
-			for dataElement in dataElementList:
+		maxSeconds = timedelta(seconds=80)
+		# Check for time range and if over, clear the graph and start from scratch
+		#if ((len(data_plot["x"])) >= maxCount):
+		#if (getTimeRange(data_plot["time"]) >= maxSeconds):
+			#splitIndex = getTimeLastSIndex(data_plot["time"], timedelta(seconds=20))
+			#for dataElement in dataElementList:
+				#data_plot[dataElement] = data_plot[dataElement][splitIndex:] + data_overflow[dataElement]
 				#data_plot[dataElement] = data_plot[dataElement][1500:] + data_overflow[dataElement]
-				data_plot[dataElement] = []
-				data_overflow[dataElement] = []
+				#data_plot[dataElement] = []
+				#data_overflow[dataElement] = []
 		
-		while ((len(data_plot["x"])) < maxCount) and plotQueue:
+		#while ((len(data_plot["x"])) < maxCount) and plotQueue:
+		while (getTimeRange(data_plot["time"]) < maxSeconds) and plotQueue:
 			dataFilename = plotQueue.popleft()
 			data_container = getDataFromFile(dataFilename)
 			data_list = vars(data_container)
@@ -112,6 +118,21 @@ def generatePlotData(dataRPi, maxCount, dataFolder, piID):
 			
 			filesAlreadyRead.append(dataFilename)
 	
+		#for index, value in enumerate(data_plot["x"]):
+			#print("(" + str(value) + ", " + str(data_plot["time"][index]) + ")")
+		#input("BEFORE")
+		
+		if (getTimeRange(data_plot["time"]) >= maxSeconds):
+			splitIndex = getTimeLastSIndex(data_plot["time"], 10)
+			for dataElement in dataElementList:
+				data_plot[dataElement] = data_plot[dataElement][splitIndex:] + data_overflow[dataElement]
+				#data_plot[dataElement] = []
+				#data_overflow[dataElement] = []	
+		
+		#for index, value in enumerate(data_plot["x"]):
+			#print("(" + str(value) + ", " + str(data_plot["time"][index]) + ")")
+		#input("AFTER")
+		
 		# Might not need this, as data_plot and data_overflow are pointing to the class already
 		# So they will update as above. Do it anyway just in case?
 		# Set the class variables to the working variables "data_plot", "data_overflow"
@@ -120,6 +141,24 @@ def generatePlotData(dataRPi, maxCount, dataFolder, piID):
 			setattr(dataRPi.data_overflow, dataElement, data_overflow[dataElement])
 			
 	return dataRPi
+
+def getTimeLastSIndex(timeList, secondsRange):
+	# This scans from the latest time on the timeList (to the left)
+	# and grabs the time sample of length "secondsRange"
+	deltaTime = datetime.now()
+	for index, time in enumerate(reversed(timeList)):
+		deltaTime = timeList[-1] - time
+		if (deltaTime > timedelta(seconds=secondsRange)):
+			return (len(timeList) - index)
+	
+def getTimeRange(timeList):
+	if not timeList:
+		return timedelta(seconds=0)
+
+	earliestTime = timeList[0]
+	latestTime = timeList[-1]
+	
+	return (latestTime - earliestTime)
 		
 def plotAllRPi(data_RPi_All, saveLocation, axisToPlot):
 	print("Plotting - " + axisToPlot)
@@ -169,8 +208,8 @@ def plotAllRPi(data_RPi_All, saveLocation, axisToPlot):
 	
 	# Round start of time up to the nearest 10 seconds
 	# For cleanliness on axis
-	etc_num = round(startOfGraph.second, -1)
-	startOfGraph -= (timedelta(seconds=(startOfGraph.second - etc_num)))
+	roundTimeAdjust = round(startOfGraph.second, -1)
+	startOfGraph -= (timedelta(seconds=(startOfGraph.second - roundTimeAdjust)))
 	endOfGraph = startOfGraph + timedelta(seconds=maxSeconds)
 	
 	x_ticks = []
@@ -186,7 +225,6 @@ def plotAllRPi(data_RPi_All, saveLocation, axisToPlot):
 	plt.xticks(x_ticks, rotation='vertical')
 	
 	plt.savefig(saveLocation + "/plot_" + axisToPlot + ".png")
-	plt.savefig(location)
 	plt.clf()
 	plt.close("all")
 		
@@ -295,7 +333,7 @@ printPlotterSettings()
 
 # Temporary values before we fix for modular design
 maxCount = 6000
-ignoringExistingData = True
+ignoringExistingData = False
 
 plotterWorkerList = []
 
