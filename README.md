@@ -190,7 +190,7 @@ Congratulations! You have completed setting up your Raspberry Pi for RPi_ADXL us
 #3.0 Configuring the RPi_ADXL
 ###3.1 RPi_settings.ini
 
-RPi_settings.ini contains all of the configurable settings that runs with either mainADXL.py or uploadADXL.py. See below for example:
+RPi_settings.ini contains all of the configurable settings that runs with mainADXL.py. See below for example:
 
 RPi_settings.ini:
 ````
@@ -228,17 +228,17 @@ dataFolder=ADXLData/
 - **uploadng** - Boolean True/False to enable/disable uploading
 - **uploadUser** - The user used to upload files in the remote server
 - **uploadHost** - Remote server IP
-- **uploadDirectory** - The remote directory uploadADXL.py will attempt to upload files to.
+- **uploadDirectory** - The remote directory for upload.
 - **uploadInterval** - How often uploadADXL will loop to check for any new files to upload.
 - **dataFolder** - The local data folder (default "ADXLData/") used to store data & log files.
 
 <br><br><br>
 ###3.2 Private ssh key for connecting and uploading to remote server
-uploadADXL.py uploads to remote server by ssh key authentication. On dev/testing we use the user `upload@104.236.141.183` on a virtual linux server hosted in San Fransisco. The ssh keys have already been generated during dev/testing, so please ask the developer for the private key if you are adding new RPi_ADXLs (or simply want to ssh into the server).
+mainADXL.py uploads to remote server by ssh key authentication. On dev/testing we use the user `upload@104.236.141.183` on a virtual linux server hosted in San Fransisco. The ssh keys have already been generated during dev/testing, so please ask the developer for the private key if you are adding new RPi_ADXLs (or simply want to ssh into the server).
 
 **The SSH private key must be placed in /home/pi/.ssh/** as the key location & name were made non-configurable outside of the script intentionally
 
-**Without the proper SSH private key, your upload will fail to authenticate and the server will refuse you connection, effectively failing uploadADXL.py**
+**Without the proper SSH private key, your upload will fail to authenticate and the server will refuse you connection, effectively failing upload**
 
 <br><br><br>
 ###3.3 Remote Server Configuration
@@ -258,11 +258,11 @@ There should be one folder per RPi_ADXL in the RPi_ADXL_Storage directory. For e
 
 Every time you add new RPis to the system you must add new folders here to give them somewhere to upload to.
 
-**Note that `uploadDirectory` in RPi_settings.ini should only point to `/home/upload/RPi_ADXL_Storage/` as uploadADXL.py will find the correct unique folder by itself with its piID**
+**Note that `uploadDirectory` in RPi_settings.ini should only point to `/home/upload/RPi_ADXL_Storage/` as mainADXL.py will find the correct unique folder by itself with its piID**
 
 <br><br><br>
 #4.0 Running the RPi_ADXL
-RPi_ADXL is run by two main scripts: `mainADXL.py` and `uploadADXL.py`. These are run with `python3`. Other scripts included in the script are used for testing/debugging purposes.
+RPi_ADXL is run by two main scripts: `mainADXL.py`. These are run with `python3`. Other scripts included in the script are used for testing/debugging purposes.
 
 **Note in LINUX: Press CTRL+C to interrupt a script and terminate it.**
 
