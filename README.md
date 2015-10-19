@@ -60,7 +60,7 @@ In the console, run `passwd`. This will ask you for a new password. Simply input
 The root user's password is by default also raspberry. However, if we're only worried about remote intrusions, we can leave this as the default password and just disable remote login to the user root. This way if something goes wrong we can always plug our keyboard into our raspberry pi and access root without forgetting some other complicated password.
 
 To remove ssh remote root login, run `sudo nano /etc/ssh/sshd_config`
-![permitRootLoginimage](http://i.imgur.com/70DNP2E.png)
+![permitRootLoginimage](http://i.imgur.com/70DNP2E.png)<br>
 Locate the entry `PermitRootLogin` and change the `yes` to `no`, or comment it out. Done.
 <br><br><br>
 
@@ -82,8 +82,8 @@ Note that ssh-keys have already been generated for the development and testing o
 
 There are multiple ways to generate ssh-key pairs. For this example we'll do it on the Raspberry Pi.
 
-Run `ssh-keygen -t rsa -C "RPi_ADXL"`. Press `ENTER` to continue and save it in its default name/dir. You may choose to leave the passphrase as empty (a passphrase adds a password to the private key, adding another authentication step).
-![ssh-keygenimage](http://i.imgur.com/y5sXvWR.png)
+Run `ssh-keygen -t rsa -C "RPi_ADXL"`. Press `ENTER` to continue and save it in its default name/dir. You may choose to leave the passphrase as empty (a passphrase adds a password to the private key, adding another authentication step).<br>
+![ssh-keygenimage](http://i.imgur.com/y5sXvWR.png)<br>
 
 Typing `ls /pi/home/.ssh/` should now show two new files: `id_rsa` and `id_rsa.pub`.
 
