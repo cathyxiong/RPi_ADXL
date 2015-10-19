@@ -60,7 +60,7 @@ In the console, run `passwd`. This will ask you for a new password. Simply input
 The root user's password is by default also raspberry. However, if we're only worried about remote intrusions, we can leave this as the default password and just disable remote login to the user root. This way if something goes wrong we can always plug our keyboard into our raspberry pi and access root without forgetting some other complicated password.
 
 To remove ssh remote root login, run `sudo nano /etc/ssh/sshd_config`
-![permitRootLoginimage](http://i.imgur.com/70DNP2E.png)
+![permitRootLoginimage](http://i.imgur.com/70DNP2E.png)<br>
 Locate the entry `PermitRootLogin` and change the `yes` to `no`, or comment it out. Done.
 <br><br><br>
 
@@ -82,8 +82,8 @@ Note that ssh-keys have already been generated for the development and testing o
 
 There are multiple ways to generate ssh-key pairs. For this example we'll do it on the Raspberry Pi.
 
-Run `ssh-keygen -t rsa -C "RPi_ADXL"`. Press `ENTER` to continue and save it in its default name/dir. You may choose to leave the passphrase as empty (a passphrase adds a password to the private key, adding another authentication step).
-![ssh-keygenimage](http://i.imgur.com/y5sXvWR.png)
+Run `ssh-keygen -t rsa -C "RPi_ADXL"`. Press `ENTER` to continue and save it in its default name/dir. You may choose to leave the passphrase as empty (a passphrase adds a password to the private key, adding another authentication step).<br>
+![ssh-keygenimage](http://i.imgur.com/y5sXvWR.png)<br>
 
 Typing `ls /pi/home/.ssh/` should now show two new files: `id_rsa` and `id_rsa.pub`.
 
@@ -196,6 +196,7 @@ north_orient = y
 
 [Upload]
 # uploadInterval is in minutes
+uploading=True
 uploadUser=upload
 uploadHost=104.236.141.183
 uploadDirectory=/home/upload/RPi_ADXL_Storage/
@@ -209,6 +210,7 @@ dataFolder=ADXLData/
 - **checkForSignificance** - If True, mainADXL.py will ONLY write files that have gone over the given threshold values.
 - **_thresh** - In g's, these values are the thresholds `checkForSignificance` will look for to see if anything significant has been recorded. Anything below these thresholds will be ignored if checkForSignificance = True.
 - **_orient** - Input here what orientation the ADXLs are placed - this is for reference only, and will be printed to the file.
+- **uploadng** - Boolean True/False to enable/disable uploading
 - **uploadUser** - The user used to upload files in the remote server
 - **uploadHost** - Remote server IP
 - **uploadDirectory** - The remote directory uploadADXL.py will attempt to upload files to.
@@ -257,28 +259,26 @@ Run mainADXL.py with `sudo python3 mainADXL.py`
 
 The script will then display some options. These are self-explanatory and you can refer to the [settings.ini section](https://github.com/theSpeare/RPi_ADXL#31-rpi_settingsini). All these default input settings can be configured via RPi_settings.ini and will load upon restarting the script.
 
-####uploadADXL.py
-Run uploadADXL.py with `sudo python3 uploadADXL.py`
-`sudo` may not be required for this, but we will use it anyway to be careful.
-
-Same as mainADXL.py, the script will ask you if you wish to use default values loaded from the RPi_settings.ini file.
-
-Both scripts have verbose screen outputs that should not be too difficult to understand. Please ask the developer if you need any further explanation for each output line, otherwise you can always look through the .py scripts yourself in the source and investigate.
-
 ####Skipping Input Stage
 Both scripts can be run with an argument from the console to skip the input stage in either script and just use default config values. To do this, you simply add "-s" or "--skipinput" at the end of your python call command.
 
-For example:
 `sudo python3 mainADXL.py -s`
-`sudo python3 uploadADXL.py -s`
 
 This will allow you to quickly start the scripts without having to input anything. This will also be even more useful when we use Screen.
 
+####uploadADXL.py
+As of the latest version, uploadADXL.py has been merged to mainADXL.py as a parallel process.
 
 <br><br><br>
 ###4.2 Running the Scripts with Screen
+A screen session can be started with the command `screen`. Likewise, a screen session can be created and named with the command `screen -Y <name>`. To list screen sessions use the command `screen -ls`, you can then reconnect to a desired listed session with `screen -r <the_screen>`.
 
+Every screen is essentially a pesistent session, allowing the user to attach and detach at any time while being able to log out. Once in a session, you must always detach with `CTRL+D` before exiting.
 
+Execute all main scripts within a screen to keep them persistent and running even after you've logged off.
 
 <br><br><br>
 ###4.3 Killing the Scripts
+Killing mainADXL.py can be done by pressing `CTRL+C` in the console. However due to generic try/catches, you must hold `CTRL+C` for awhile until every multiprocess in the script has been killed.
+
+Another alternative is to use `killall python3` or `killall python` to kill all running python processes. This is the most reliable, but most abrupt way to do so.
