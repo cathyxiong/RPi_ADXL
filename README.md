@@ -28,6 +28,7 @@ All scripts written by Lui Villarias. All modules and libraries referenced were 
 Libraries used were: 
 - plumbum @ https://pypi.python.org/pypi/plumbum
 - i2clibraries by ThinkBowl @ https://github.com/quick2wire/quick2wire-python-api
+- all other libraries used are general Python modules
 
 Main scripts used:
 - mainADXL.py - runs all main functions
