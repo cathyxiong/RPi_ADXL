@@ -2,6 +2,7 @@ RPi_ADXL
 =====================
 
 # Table of Contents
+0.0 [General Information](https://github.com/theSpeare/RPi_ADXL#00-general-information)<br><br><br>
 1.0 [Installation](https://github.com/theSpeare/RPi_ADXL#10-installation)<br>
 __1.1 [Raspberry Pi Setup](https://github.com/theSpeare/RPi_ADXL#11-raspberry-pi-setup)<br>
 __1.2 [Security Setup](https://github.com/theSpeare/RPi_ADXL#12-security-setup)<br>
@@ -19,6 +20,20 @@ __3.3 [Remote Server Configuration](https://github.com/theSpeare/RPi_ADXL#33-rem
 4.0 [Running RPi_ADXL](https://github.com/theSpeare/RPi_ADXL#40-running-the-rpi_adxl)<br>
 __4.1 [Running the Main RPi_ADXL Scripts](https://github.com/theSpeare/RPi_ADXL#41-running-the-main-rpi_adxl-scripts)<br>
 __4.2 [Running the Scripts with Screen](https://github.com/theSpeare/RPi_ADXL#42-running-the-scripts-with-screen)<br>
+
+<br><br>
+# 0.0 General Information
+All scripts written by Lui Villarias. All modules and libraries referenced were written by their respective authors under GPL license.
+
+Libraries used were: 
+- plumbum @ https://pypi.python.org/pypi/plumbum
+- i2clibraries by ThinkBowl @ https://github.com/quick2wire/quick2wire-python-api
+
+Main scripts used:
+- mainADXL.py - runs all main functions
+- rpi_plotter/plotADXLServer.py - run on the remote server to plot to website
+- checkForConnections.sh - run on CRONTAB to reconnect WiFi when downed
+<br>
 
 # 1.0 Installation
 Installing the RPi_ADXL source must be done AFTER the Raspberry Pi has been loaded with Raspbian and its appropriate settings configured. Please follow the documentation to properly setup a Raspberry Pi for use with RPi_ADXL
