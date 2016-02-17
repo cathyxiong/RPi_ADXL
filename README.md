@@ -123,8 +123,12 @@ Configuring via GUI: https://www.raspberrypi.org/documentation/configuration/wir
 Configuring via Command Line: https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cli.md
 <br><br><br>
 
+####1.3.2 Setting up static IP
+Setting up a static IP means you can ssh into the raspberry pi using the same ip address. 
+Follow these instructions for setting up a static IP: http://www.circuitbasics.com/how-to-set-up-a-static-ip-on-the-raspberry-pi/ 
+Except do not add these lines `interface eth0 static ip_address=10.0.0.100` as a static ethernet ip address is not required.
 
-####1.3.2 Hostname
+####1.3.3 Hostname
 You may give your RPi an alias, such as RPi-Lui, for ease of identification in the network.
 
 Type `sudo raspi-config`. Under "8 Advanced Options" > "A2 Hostname", you may input the hostname of your Pi.
