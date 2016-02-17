@@ -101,9 +101,9 @@ There are multiple ways to generate ssh-key pairs. For this example we'll do it 
 Run `ssh-keygen -t rsa -C "RPi_ADXL"`. Press `ENTER` to continue and save it in its default name/dir. You may choose to leave the passphrase as empty (a passphrase adds a password to the private key, adding another authentication step).<br>
 ![ssh-keygenimage](http://i.imgur.com/y5sXvWR.png)<br>
 
-Typing `ls /pi/home/.ssh/` should now show two new files: `id_rsa` and `id_rsa.pub`.
+Typing `ls /home/pi/.ssh/` should now show two new files: `id_rsa` and `id_rsa.pub`.
 
-Append this to the authorized_key file in the .ssh/ folder by running `/pi/home/.ssh/id_rsa.pub >> /pi/home/.ssh/authorized_keys`. Now your RPi is using this public key to compare with any private keys that attempts to ssh authenticate with it. **It is vital that you have a way of copying this id_rsa file, perhaps through FireZilla.**
+Append this to the authorized_key file in the .ssh/ folder by running `/home/pi/.ssh/id_rsa.pub >> /home/pi/.ssh/authorized_keys`. Now your RPi is using this public key to compare with any private keys that attempts to ssh authenticate with it. **It is vital that you have a way of copying this id_rsa file, perhaps through FireZilla.**
 
 **This is why I will not write about how to disable ssh password login, but rather recommend that you change your pi login password to something medium and secure.**
 <br><br><br>
