@@ -55,6 +55,14 @@ This properly configures the i2c modules to run, and should allow our RPi to com
 Then run `sudo apt-get upgrade` to ensure your OS is up-to-date.
 <br><br><br>
 
+#### 1.1.2 Connecting the ADXL 345
+Power off the Raspberry Pi. 
+If you are using the Adafruit ADXL 345: Connect GND to GND, 3V to 3V3, SDA to SDA and SCL to SCL.
+If you are using the Sparkfun ADXL 345: Connect GND to ground, VCC to 3.3V, CS to 3.3V, SDO to ground, SDA to SDA and SCL to SCL. 
+
+If using the Sparkfun ADXL 345 next power up the Raspberry Pi and type `sudo apt-get install python-smbus i2c-tools git-core`. Test the ADXL345 is found on the I2C bus by running `sudo i2cdetect -y 1` and you should see a device at address 53. After installing the RPi_ADXL source file change directory to RPi_ADXL and run `sudo python3 barPrintTest.py` to check the accelerometer works.
+<br><br><br>
+
 ### 1.2 Security Setup
 This is a very important section. The Raspberry Pi's default user and password is "pi" and "raspberry" respectively. If your Raspberry Pi is open to the internet (if you've forwarded its ports through the router), then anyone scanning can hijack your Pi and do whatever they please.
 
