@@ -114,6 +114,8 @@ Typing `ls /home/pi/.ssh/` should now show two new files: `id_rsa` and `id_rsa.p
 Append this to the authorized_key file in the .ssh/ folder by running `/home/pi/.ssh/id_rsa.pub >> /home/pi/.ssh/authorized_keys`. Now your RPi is using this public key to compare with any private keys that attempts to ssh authenticate with it. **It is vital that you have a way of copying this id_rsa file, perhaps through FireZilla.**
 
 **This is why I will not write about how to disable ssh password login, but rather recommend that you change your pi login password to something medium and secure.**
+
+An alternate way is to follow these insructions https://www.raspberrypi.org/documentation/remote-access/ssh/passwordless.md. Make sure both your pc and pi are on the same wifi network. Follow the instructions in the link by typing in the commands on your pc before signing in to your pi. 
 <br><br><br>
 
 
