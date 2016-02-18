@@ -55,7 +55,7 @@ This properly configures the i2c modules to run, and should allow our RPi to com
 Then run `sudo apt-get upgrade` to ensure your OS is up-to-date.
 <br><br><br>
 
-#### 1.1.2 Connecting the ADXL 345
+#### 1.1.1 Connecting the ADXL 345
 Power off the Raspberry Pi. 
 If you are using the Adafruit ADXL 345: Connect GND to GND, 3V to 3V3, SDA to SDA and SCL to SCL.
 If you are using the Sparkfun ADXL 345: Connect GND to ground, VCC to 3.3V, CS to 3.3V, SDO to ground, SDA to SDA and SCL to SCL. 
