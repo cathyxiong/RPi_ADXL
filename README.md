@@ -58,7 +58,7 @@ Then run `sudo apt-get upgrade` to ensure your OS is up-to-date.
 #### 1.1.1 Connecting the ADXL 345
 Power off the Raspberry Pi. 
 If you are using the Adafruit ADXL 345: Connect GND to GND, 3V to 3V3, SDA to SDA and SCL to SCL.
-If you are using the Sparkfun ADXL 345: Connect GND to ground, VCC to 3.3V, CS to 3.3V, SDO to ground, SDA to SDA and SCL to SCL. 
+If you are using the Sparkfun ADXL 345: Connect GND to ground, VCC to 3.3V, CS to 3.3V, SDO to ground, SDA to SDA and SCL to SCL. For more detailed instructions see https://ms-iot.github.io/content/en-US/win10/samples/I2CAccelerometer.htm 
 
 If using the Sparkfun ADXL 345 next power up the Raspberry Pi and type `sudo apt-get install python-smbus i2c-tools git-core`. Test the ADXL345 is found on the I2C bus by running `sudo i2cdetect -y 1` and you should see a device at address 53. After installing the RPi_ADXL source file change directory to RPi_ADXL and run `sudo python3 barPrintTest.py` to check the accelerometer works.
 <br><br><br>
