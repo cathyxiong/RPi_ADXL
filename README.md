@@ -93,6 +93,7 @@ Locate the entry `PermitRootLogin` and change the `yes` to `no`, or comment it o
 We can prevent attempts to bruteforce our password (or at least make it harder) by installing fail2ban. fail2ban by default runs as a service and bans any access to the RPi for 10 minutes if an incorrect password has been entered three times. This is configurable. A configuration tutorial is available here: https://www.digitalocean.com/community/tutorials/how-to-protect-ssh-with-fail2ban-on-ubuntu-14-04 under the section "Configure Fail2Ban with your Service Settings". For now we're okay to use the default settings.
 
 Install fail2ban by running `sudo apt-get install fail2ban`. Done.
+If this doesn't work first configure wifi then install fail2ban. 
 <br><br><br>
 
 
