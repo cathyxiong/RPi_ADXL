@@ -62,7 +62,9 @@ If you are using the Sparkfun ADXL 345: Connect GND to ground, VCC to 3.3V, CS t
 
 If using the Sparkfun ADXL 345 next power up the Raspberry Pi and type `sudo apt-get install python-smbus i2c-tools git-core`. Test the ADXL345 is found on the I2C bus by running `sudo i2cdetect -y 1` and you should see a device at address 53. After installing the RPi_ADXL source file change directory to RPi_ADXL and run `sudo python3 barPrintTest.py` to check the accelerometer works.
 
-![breadboardImage](http://i.imgur.com/v0i8EdS.png?1)
+If connecting both ADXL 345 and a DS1307 RTC module follow the wiring below:
+![breadboardImage](http://i.imgur.com/0BIYWP2.png)
+Test both are present by running sudo i2cdetect -y 1. 
 <br><br><br>
 
 ### 1.2 Security Setup
