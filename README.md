@@ -47,7 +47,7 @@ The operating system used was the latest Rasbian build available on the raspberr
 
 Once Rasbian has been installed, run `sudo raspi-config` (if it hasn't already come up automatically during setup). Change the clock settings under "4 Internationalisation Options" to Pacific Ocean -> Auckland. This is to ensure that the RPi_ADXL timestamps are accurate. Then, under "8 Advanced Options", turn on SSH & turn on I2C and enable loading by default.
 
-Then run `sudo nano /etc/modules` and add `i2c-bcm2708 and i2c-dev` lines as so:
+Then run `sudo nano /etc/modules` and add `i2c-bcm2708 and i2c-dev` lines as so. Type ctrl+x then y to save and exit. 
 ![modulesimage](http://i.imgur.com/JLamjTD.png)
 
 This properly configures the i2c modules to run, and should allow our RPi to communicate with the ADXL.
