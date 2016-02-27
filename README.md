@@ -259,7 +259,7 @@ dataFolder=ADXLData/
 ###3.2 Private ssh key for connecting and uploading to remote server
 mainADXL.py uploads to remote server by ssh key authentication. On dev/testing we use the user `upload@104.236.141.183` on a virtual linux server hosted in San Fransisco. The ssh keys have already been generated during dev/testing, so please ask the developer for the private key if you are adding new RPi_ADXLs (or simply want to ssh into the server).
 
-**The SSH private key must be placed in /home/pi/.ssh/** as the key location & name were made non-configurable outside of the script intentionally. After placing the private key in the folder try to ssh into the remote server from the pi. `ssh upload@104.236.141.183`. If you get a message permissions are too open private key is ignored type `chmod 600 /home/pi/.ssh/id_rsa` so only the owner can read and write to the private key. If you type `ssh upload@104.236.141.183` again you should be able to ssh into the remote server without requiring a password.
+**The SSH private key must be placed in /home/pi/.ssh/** as the key location & name were made non-configurable outside of the script intentionally. After placing the private key in the folder try to ssh into the remote server from the pi. `ssh upload@104.168.162.19`. If you get a message permissions are too open private key is ignored type `chmod 600 /home/pi/.ssh/id_rsa` so only the owner can read and write to the private key. If you type `ssh upload@104.168.162.19` again you should be able to ssh into the remote server without requiring a password.
 
 
 **Without the proper SSH private key, your upload will fail to authenticate and the server will refuse you connection, effectively failing upload**
