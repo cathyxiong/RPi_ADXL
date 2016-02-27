@@ -64,7 +64,8 @@ If using the Sparkfun ADXL 345 next power up the Raspberry Pi and type `sudo apt
 
 If connecting both ADXL 345 and a DS1307 RTC module follow the wiring below:
 ![breadboardImage](http://i.imgur.com/0BIYWP2.png)
-Test both are present by running sudo i2cdetect -y 1. 
+Test both are present by running `sudo i2cdetect -y 1`.
+You should get an address at 53 and 68.
 <br><br><br>
 
 ### 1.2 Security Setup
