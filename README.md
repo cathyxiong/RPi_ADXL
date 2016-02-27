@@ -203,6 +203,7 @@ To copy and paste the file as RPi_settings.ini: make sure you are in the folder 
 **VERY IMPORTANT** The RPi_ADXL identifies itself uniquely against others with an ID inside the RPi_settings.ini file. Make sure you change the ID to something unique that no other RPi_ADXL is using.
 
 To edit the .ini file, run `sudo nano RPi_settings.ini`. Change the entry under `piID=RPi-Lui` to `piID=RPi-<insertwhatevernameyouwanthere>` or change the piID to something like `POM_001`. Also change the uploadHost to the remote server IP (currently 104.168.162.19). 
+Also change the plot settings by first typing `cd rpi_plotter` then running `sudo nano plot_settings.ini`. Change the save location to the new ip address. Change the piIDLIst to the folders currently stored on the remote server under the dataFolder. 
 
 ![piIDimage](http://i.imgur.com/caDGMXv.png)
 
